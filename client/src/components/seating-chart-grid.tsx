@@ -334,19 +334,47 @@ export default function SeatingChartGrid({
 
   return (
     <div className="classroom-container">
-      {/* Teacher Area Indicator */}
-      <div 
-        className="absolute top-2 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-lg text-sm font-medium text-primary z-10"
-        style={{ zIndex: 10 }}
-      >
-        📋 Teacher Area
-      </div>
-      
       <div 
         className="relative bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-lg border p-4 overflow-hidden"
         style={{ width: `${maxX}px`, height: `${maxY}px`, minHeight: '500px' }}
         data-testid="seating-chart-grid"
       >
+        {/* Teacher Desk - Upper Left Corner */}
+        <div 
+          className="absolute bg-amber-100 dark:bg-amber-900/30 border-2 border-amber-300 dark:border-amber-600 rounded-lg shadow-md"
+          style={{ 
+            left: '20px', 
+            top: '20px', 
+            width: '80px', 
+            height: '60px',
+            zIndex: 15 
+          }}
+          data-testid="teacher-desk"
+        >
+          <div className="flex flex-col items-center justify-center h-full text-amber-700 dark:text-amber-300">
+            <div className="text-lg">🪑</div>
+            <div className="text-xs font-medium">Teacher</div>
+          </div>
+        </div>
+
+        {/* Whiteboard - Front Center */}
+        <div 
+          className="absolute bg-slate-200 dark:bg-slate-700 border-2 border-slate-400 dark:border-slate-500 rounded-md shadow-lg"
+          style={{ 
+            left: '50%', 
+            top: '15px', 
+            width: '200px', 
+            height: '40px',
+            transform: 'translateX(-50%)',
+            zIndex: 15 
+          }}
+          data-testid="whiteboard"
+        >
+          <div className="flex items-center justify-center h-full text-slate-600 dark:text-slate-300">
+            <div className="text-sm font-medium">📋 Whiteboard</div>
+          </div>
+        </div>
+
         {seats.map((seat) => {
           const layoutPos = layoutPositions.find(pos => pos.position === seat.position);
           return layoutPos ? renderSeat(seat, layoutPos) : null;
