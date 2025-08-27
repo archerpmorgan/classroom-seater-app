@@ -77,6 +77,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Smart CSV parsing function
+  function parseCSVLine(line: string): string[] {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    let i = 0;
+
+    while (i < line.length) {
+      const char = line[i];
+      
+      if (char === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          // Escaped quote
+          current += '"';
+          i += 2;
+        } else {
+          // Toggle quote state
+          inQuotes = !inQuotes;
+          i++;
+        }
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+        i++;
+      } else {
+        current += char;
+        i++;
+      }
+    }
+    
+    result.push(current.trim());
+    return result;
+  }
+
   // CSV upload endpoint
   app.post("/api/students/upload-csv", upload.single("file"), async (req, res) => {
     try {
@@ -91,40 +125,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "CSV must contain header and at least one data row" });
       }
 
-      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-      const expectedHeaders = ['name', 'primarylanguage', 'secondarylanguages', 'skilllevel', 'workswellwith', 'avoidpairing', 'notes'];
+      const headers = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase());
       
-      // Map CSV headers to schema fields
+      // Map CSV headers to schema fields with flexible matching
       const headerMap: Record<string, string> = {
         'name': 'name',
+        'student': 'name',
+        'studentname': 'name',
+        'fullname': 'name',
         'primarylanguage': 'primaryLanguage',
         'primary_language': 'primaryLanguage',
+        'language': 'primaryLanguage',
+        'mainlanguage': 'primaryLanguage',
         'secondarylanguages': 'secondaryLanguages',
         'secondary_languages': 'secondaryLanguages',
+        'otherlanguages': 'secondaryLanguages',
+        'additionallanguages': 'secondaryLanguages',
         'skilllevel': 'skillLevel',
         'skill_level': 'skillLevel',
+        'level': 'skillLevel',
+        'ability': 'skillLevel',
         'workswellwith': 'worksWellWith',
         'works_well_with': 'worksWellWith',
+        'partners': 'worksWellWith',
+        'goodwith': 'worksWellWith',
+        'friends': 'worksWellWith',
         'avoidpairing': 'avoidPairing',
         'avoid_pairing': 'avoidPairing',
-        'notes': 'notes'
+        'avoid': 'avoidPairing',
+        'separate': 'avoidPairing',
+        'dontpairwith': 'avoidPairing',
+        'notes': 'notes',
+        'comments': 'notes',
+        'additional': 'notes',
+        'info': 'notes'
       };
 
       const students = [];
       const errors = [];
+      const warnings = [];
 
       for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim());
-        if (values.length !== headers.length) {
-          errors.push(`Row ${i + 1}: Column count mismatch`);
-          continue;
+        const values = parseCSVLine(lines[i]);
+        
+        // Smart column count handling
+        const expectedColumns = headers.length;
+        if (values.length < expectedColumns) {
+          // Pad with empty strings for missing columns
+          while (values.length < expectedColumns) {
+            values.push('');
+          }
+          warnings.push(`Row ${i + 1}: Added missing columns (filled with empty values)`);
+        } else if (values.length > expectedColumns) {
+          // Trim extra columns
+          values.splice(expectedColumns);
+          warnings.push(`Row ${i + 1}: Removed extra columns`);
         }
 
         const studentData: any = {};
         headers.forEach((header, index) => {
-          const mappedField = headerMap[header.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase()];
-          if (mappedField) {
-            studentData[mappedField] = values[index];
+          const cleanHeader = header.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
+          const mappedField = headerMap[cleanHeader];
+          if (mappedField && values[index] !== undefined) {
+            let value = values[index];
+            
+            // Clean up common formatting issues
+            if (mappedField === 'skillLevel') {
+              value = value.toLowerCase();
+              // Handle common variations
+              if (value.includes('beg') || value === 'low' || value === '1') value = 'beginner';
+              if (value.includes('int') || value === 'med' || value === 'middle' || value === '2') value = 'intermediate';
+              if (value.includes('adv') || value === 'high' || value === '3') value = 'advanced';
+            }
+            
+            studentData[mappedField] = value;
           }
         });
 
@@ -133,7 +207,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           students.push(validatedStudent);
         } catch (error) {
           if (error instanceof z.ZodError) {
-            errors.push(`Row ${i + 1}: ${error.errors.map(e => e.message).join(', ')}`);
+            // Try to provide helpful error messages
+            const errorMessages = error.errors.map(e => {
+              if (e.code === 'invalid_enum_value' && e.path[0] === 'skillLevel') {
+                return `Skill level must be 'beginner', 'intermediate', or 'advanced' (got '${studentData.skillLevel}')`;
+              }
+              return e.message;
+            });
+            errors.push(`Row ${i + 1}: ${errorMessages.join(', ')}`);
           }
         }
       }
@@ -144,12 +225,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const createdStudents = await storage.createStudentsBatch(students);
       
-      res.json({
+      const response: any = {
         message: `Successfully imported ${createdStudents.length} students`,
-        students: createdStudents,
-        errors: errors.length > 0 ? errors : undefined
-      });
+        students: createdStudents
+      };
+      
+      if (errors.length > 0) response.errors = errors;
+      if (warnings.length > 0) response.warnings = warnings;
+      
+      res.json(response);
     } catch (error) {
+      console.error('CSV processing error:', error);
       res.status(500).json({ message: "Failed to process CSV file" });
     }
   });
