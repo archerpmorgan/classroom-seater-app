@@ -1,0 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 98%);
+  --foreground: hsl(210, 15%, 15%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(210, 15%, 15%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(210, 15%, 15%);
+  --primary: hsl(210, 60%, 50%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(150, 40%, 45%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --muted: hsl(210, 20%, 95%);
+  --muted-foreground: hsl(210, 15%, 45%);
+  --accent: hsl(45, 90%, 60%);
+  --accent-foreground: hsl(210, 15%, 15%);
+  --destructive: hsl(0, 65%, 55%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(210, 20%, 85%);
+  --input: hsl(210, 20%, 85%);
+  --ring: hsl(210, 60%, 50%);
+  --radius: 8px;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
+}
+
+.dark {
+  --background: hsl(0, 0%, 0%);
+  --foreground: hsl(200, 6.6667%, 91.1765%);
+  --card: hsl(228, 9.8039%, 10%);
+  --card-foreground: hsl(0, 0%, 85.0980%);
+  --popover: hsl(0, 0%, 0%);
+  --popover-foreground: hsl(200, 6.6667%, 91.1765%);
+  --primary: hsl(210, 60%, 50%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(150, 40%, 45%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --muted: hsl(0, 0%, 9.4118%);
+  --muted-foreground: hsl(210, 3.3898%, 46.2745%);
+  --accent: hsl(45, 90%, 60%);
+  --accent-foreground: hsl(210, 15%, 15%);
+  --destructive: hsl(0, 65%, 55%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(210, 5.2632%, 14.9020%);
+  --input: hsl(207.6923, 27.6596%, 18.4314%);
+  --ring: hsl(210, 60%, 50%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+.student-seat {
+  transition: all 0.2s ease;
+  cursor: move;
+}
+
+.student-seat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.drag-over {
+  border: 2px dashed hsl(210, 60%, 50%);
+  background-color: hsl(210, 60%, 98%);
+}
+
+.classroom-grid {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  background: hsl(210, 30%, 96%);
+  border-radius: var(--radius);
+  min-height: 400px;
+}
+
+.rows-layout {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+.groups-layout {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.u-shape-layout {
+  grid-template-columns: repeat(8, 1fr);
+}
+
+.drag-preview {
+  opacity: 0.5;
+  transform: rotate(5deg);
+}
+
+.drop-zone {
+  min-height: 80px;
+  border: 2px dashed hsl(210, 20%, 85%);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.drop-zone.drag-over {
+  border-color: hsl(210, 60%, 50%);
+  background-color: hsl(210, 60%, 98%);
+}

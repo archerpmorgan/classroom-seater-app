@@ -1,0 +1,86 @@
+import { Badge } from "@/components/ui/badge";
+import type { Student } from "@shared/schema";
+
+interface StudentSeatProps {
+  student: Student;
+  onDragStart: (student: Student) => void;
+  onDragEnd: () => void;
+  isDragging: boolean;
+  position: number;
+}
+
+export default function StudentSeat({ 
+  student, 
+  onDragStart, 
+  onDragEnd, 
+  isDragging,
+  position 
+}: StudentSeatProps) {
+  
+  const getSkillLevelColor = (level: string) => {
+    switch (level) {
+      case 'beginner': return 'bg-primary';
+      case 'intermediate': return 'bg-accent';
+      case 'advanced': return 'bg-secondary';
+      default: return 'bg-muted';
+    }
+  };
+
+  const getLanguagesDisplay = () => {
+    const languages = [student.primaryLanguage, ...student.secondaryLanguages];
+    return languages.slice(0, 2).join('/');
+  };
+
+  const handleDragStart = (e: React.DragEvent) => {
+    onDragStart(student);
+    // Add visual feedback
+    e.currentTarget.classList.add('drag-preview');
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    onDragEnd();
+    e.currentTarget.classList.remove('drag-preview');
+  };
+
+  return (
+    <div
+      className={`student-seat bg-background border-2 border-border rounded-lg p-3 text-center shadow-sm ${
+        isDragging ? 'opacity-50' : ''
+      }`}
+      draggable
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      data-testid={`student-seat-${student.id}`}
+      data-student-id={student.id}
+    >
+      <div className="text-sm font-medium text-foreground truncate" title={student.name}>
+        {student.name}
+      </div>
+      <div className="text-xs text-muted-foreground mt-1 truncate" title={getLanguagesDisplay()}>
+        {getLanguagesDisplay()}
+      </div>
+      <div className="flex justify-center mt-2">
+        <span 
+          className={`inline-block w-3 h-3 rounded-full ${getSkillLevelColor(student.skillLevel)}`}
+          title={student.skillLevel}
+        />
+      </div>
+      
+      {/* Show compatibility indicators if present */}
+      {(student.worksWellWith.length > 0 || student.avoidPairing.length > 0) && (
+        <div className="flex justify-center mt-1 space-x-1">
+          {student.worksWellWith.length > 0 && (
+            <span className="text-xs text-green-600" title="Has preferred partners">
+              ✓
+            </span>
+          )}
+          {student.avoidPairing.length > 0 && (
+            <span className="text-xs text-red-600" title="Has constraints">
+              ⚠
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
