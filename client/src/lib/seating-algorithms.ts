@@ -3,6 +3,8 @@ import type { Student } from "@shared/schema";
 export interface SeatAssignment {
   position: number;
   studentId: string | null;
+  customX?: number;
+  customY?: number;
 }
 
 export function generateSeatingChart(
@@ -13,7 +15,9 @@ export function generateSeatingChart(
 ): SeatAssignment[] {
   const seats: SeatAssignment[] = Array.from({ length: totalSeats }, (_, i) => ({
     position: i,
-    studentId: null
+    studentId: null,
+    customX: undefined,
+    customY: undefined
   }));
 
   if (students.length === 0) {

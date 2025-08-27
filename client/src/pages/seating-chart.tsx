@@ -10,15 +10,18 @@ import UploadArea from "@/components/upload-area";
 import SeatingChartGrid from "@/components/seating-chart-grid";
 import StudentTable from "@/components/student-table";
 import { generateSeatingChart } from "@/lib/seating-algorithms";
-import { Download, Save, GraduationCap, LayoutGrid, UserCog, Shuffle, Eraser, Printer, Users, Database, Eye, EyeOff } from "lucide-react";
+import { Download, Save, GraduationCap, LayoutGrid, UserCog, Shuffle, Eraser, Printer, Users, Database, Eye, EyeOff, ArrowLeftRight, X } from "lucide-react";
 import type { Student, SeatingChart as SeatingChartType } from "@shared/schema";
 
 export default function SeatingChart() {
   const [layout, setLayout] = useState<'traditional-rows' | 'stadium' | 'horseshoe' | 'double-horseshoe' | 'circle' | 'groups' | 'pairs'>('traditional-rows');
   const [strategy, setStrategy] = useState<string>('mixed-ability');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [currentChart, setCurrentChart] = useState<{position: number, studentId: string | null}[]>([]);
+  const [currentChart, setCurrentChart] = useState<{position: number, studentId: string | null, customX?: number, customY?: number}[]>([]);
   const [privacyMode, setPrivacyMode] = useState(false);
+  const [isSwapModalOpen, setIsSwapModalOpen] = useState(false);
+  const [firstStudentId, setFirstStudentId] = useState<string>('');
+  const [secondStudentId, setSecondStudentId] = useState<string>('');
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -268,6 +271,45 @@ export default function SeatingChart() {
     }
   };
 
+  const handleSwapStudents = () => {
+    if (!firstStudentId || !secondStudentId || firstStudentId === secondStudentId) {
+      toast({
+        title: "Invalid Selection",
+        description: "Please select two different students to swap",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Find the positions of both students
+    const firstStudentPosition = currentChart.findIndex(seat => seat.studentId === firstStudentId);
+    const secondStudentPosition = currentChart.findIndex(seat => seat.studentId === secondStudentId);
+
+    if (firstStudentPosition === -1 || secondStudentPosition === -1) {
+      toast({
+        title: "Error",
+        description: "One or both students not found in seating chart",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create new chart with swapped students
+    const newChart = [...currentChart];
+    newChart[firstStudentPosition] = { ...newChart[firstStudentPosition], studentId: secondStudentId };
+    newChart[secondStudentPosition] = { ...newChart[secondStudentPosition], studentId: firstStudentId };
+
+    setCurrentChart(newChart);
+    setIsSwapModalOpen(false);
+    setFirstStudentId('');
+    setSecondStudentId('');
+
+    toast({
+      title: "Success",
+      description: "Student positions swapped successfully",
+    });
+  };
+
   const handlePrintChart = () => {
     window.print();
   };
@@ -410,6 +452,16 @@ export default function SeatingChart() {
                 title="Download Updated CSV"
               >
                 <Download className="w-4 h-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => setIsSwapModalOpen(true)}
+                disabled={currentChart.length === 0}
+                data-testid="button-swap-students"
+                title="Swap Student Positions"
+              >
+                <ArrowLeftRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -733,6 +785,86 @@ export default function SeatingChart() {
           </div>
         </div>
       </div>
+
+      {/* Swap Students Modal */}
+      {isSwapModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-lg p-6 max-w-md mx-4 w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-card-foreground">Swap Student Positions</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setIsSwapModalOpen(false);
+                  setFirstStudentId('');
+                  setSecondStudentId('');
+                }}
+                className="h-6 w-6"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">
+                  Select First Student
+                </label>
+                <Select onValueChange={(value) => setFirstStudentId(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose first student..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {students.map((student) => (
+                      <SelectItem key={student.id} value={student.id}>
+                        {student.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">
+                  Select Second Student
+                </label>
+                <Select onValueChange={(value) => setSecondStudentId(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose second student..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {students.map((student) => (
+                      <SelectItem key={student.id} value={student.id}>
+                        {student.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsSwapModalOpen(false);
+                    setFirstStudentId('');
+                    setSecondStudentId('');
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSwapStudents}
+                  disabled={!firstStudentId || !secondStudentId || firstStudentId === secondStudentId}
+                >
+                  Swap Positions
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Loading Overlay */}
       {isGenerating && (

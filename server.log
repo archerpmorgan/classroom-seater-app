@@ -2,60 +2,13 @@
 > rest-express@1.0.0 dev
 > NODE_ENV=development tsx server/index.ts
 
-2:42:14 PM [express] serving on localhost:3000
+3:23:08 PM [express] serving on localhost:3000
+3:23:10 PM [express] GET /api/students 200 in 6ms :: []
 Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
   npx update-browserslist-db@latest
   Why you should do it regularly: https://github.com/browserslist/update-db#readme
-2:42:20 PM [express] GET /api/seating-charts 304 in 2ms :: []
-2:42:20 PM [express] GET /api/students 200 in 1ms :: []
-2:43:13 PM [express] POST /api/students/upload-csv 200 in 31ms :: {"message":"Successfully imported …
-2:43:13 PM [express] GET /api/students 200 in 1ms :: [{"name":"Alex Chen","primaryLanguage":"English…
-2:44:39 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:44:48 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:45:51 PM [express] GET /api/students 304 in 1ms :: [{"name":"Alex Chen","primaryLanguage":"English…
-2:45:51 PM [express] GET /api/seating-charts 304 in 0ms :: []
-2:47:04 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:47:12 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:47:25 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:47:35 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:47:47 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:47:47 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:50:03 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:50:12 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:50:21 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:50:35 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:50:52 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:51:47 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:51:56 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:51:56 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:52:06 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:52:06 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:52:15 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:52:22 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:52:22 PM [express] GET /api/students 304 in 5ms :: [{"name":"Alex Chen","primaryLanguage":"English…
-2:52:22 PM [express] GET /api/seating-charts 304 in 2ms :: []
-2:52:33 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:52:33 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:52:43 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:52:43 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:52:58 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:53:45 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:53:54 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:54:06 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:54:23 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:54:40 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:57:01 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:57:15 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:57:15 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:58:44 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:58:53 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-2:59:42 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-3:00:28 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-3:00:37 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-3:00:37 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-3:01:41 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-3:02:30 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-3:02:37 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-3:02:37 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-3:02:47 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
-3:03:11 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=78GjWNNYgTswfkghIOKnX
+3:23:14 PM [express] GET /api/seating-charts 304 in 1ms :: []
+3:23:14 PM [express] GET /api/students 200 in 1ms :: []
+3:23:23 PM [express] POST /api/students/upload-csv 200 in 20ms :: {"message":"Successfully imported …
+3:23:23 PM [express] GET /api/students 200 in 1ms :: [{"name":"Alex Chen","primaryLanguage":"English…
+3:24:15 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_

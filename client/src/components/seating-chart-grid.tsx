@@ -1,12 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import StudentSeat from "./student-seat";
 import type { Student } from "@shared/schema";
 
 interface SeatingChartGridProps {
   layout: 'traditional-rows' | 'stadium' | 'horseshoe' | 'double-horseshoe' | 'circle' | 'groups' | 'pairs';
   students: Student[];
-  currentChart: {position: number, studentId: string | null}[];
-  onChartChange: (chart: {position: number, studentId: string | null}[]) => void;
+  currentChart: {position: number, studentId: string | null, customX?: number, customY?: number}[];
+  onChartChange: (chart: {position: number, studentId: string | null, customX?: number, customY?: number}[]) => void;
   privacyMode?: boolean;
 }
 
@@ -30,9 +30,34 @@ export default function SeatingChartGrid({
   const [isDraggingTeacherDesk, setIsDraggingTeacherDesk] = useState(false);
   const [whiteboardPosition, setWhiteboardPosition] = useState({ x: 350, y: 15 });
   const [isDraggingWhiteboard, setIsDraggingWhiteboard] = useState(false);
-  const [doorPosition, setDoorPosition] = useState({ x: 820, y: 80 });
+  const [doorPosition, setDoorPosition] = useState({ x: 780, y: 80 });
   const [isDraggingDoor, setIsDraggingDoor] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  
+  // New state for draggable desks
+  const [isDraggingDesk, setIsDraggingDesk] = useState(false);
+  const [draggingDeskPosition, setDraggingDeskPosition] = useState<number | null>(null);
+  
+  // New state for multi-select
+  const [isBoxSelecting, setIsBoxSelecting] = useState(false);
+  const [boxSelectStart, setBoxSelectStart] = useState({ x: 0, y: 0 });
+  const [boxSelectEnd, setBoxSelectEnd] = useState({ x: 0, y: 0 });
+  const [selectedDesks, setSelectedDesks] = useState<Set<number>>(new Set());
+  const [isDraggingMultiple, setIsDraggingMultiple] = useState(false);
+  const [multiDragOffset, setMultiDragOffset] = useState({ x: 0, y: 0 });
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedDesks(new Set());
+        setIsBoxSelecting(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const getSeatCount = (layoutType: string, studentCount: number) => {
     // For groups layout, always show complete groups (4 seats per group)
@@ -333,7 +358,7 @@ export default function SeatingChartGrid({
   const seats = currentChart.length > 0 
     ? currentChart 
     : studentCount > 0 
-      ? Array.from({ length: totalSeats }, (_, i) => ({ position: i, studentId: null }))
+      ? Array.from({ length: totalSeats }, (_, i) => ({ position: i, studentId: null, customX: undefined, customY: undefined }))
       : [];
 
   const getStudentById = (id: string | null): Student | undefined => {
@@ -381,6 +406,80 @@ export default function SeatingChartGrid({
         x: Math.max(0, Math.min(900 - 45, e.clientX - containerRect.left - dragOffset.x)),
         y: Math.max(0, Math.min(600 - 120, e.clientY - containerRect.top - dragOffset.y))
       });
+    } else if (isDraggingDesk && draggingDeskPosition !== null) {
+      const containerRect = e.currentTarget.getBoundingClientRect();
+      const newX = Math.max(0, Math.min(900 - 80, e.clientX - containerRect.left - dragOffset.x)); // 80px desk width
+      const newY = Math.max(0, Math.min(600 - 80, e.clientY - containerRect.top - dragOffset.y)); // 80px desk height
+      
+      // Update the chart with new custom position
+      const newChart = seats.map(seat => 
+        seat.position === draggingDeskPosition 
+          ? { ...seat, customX: newX, customY: newY }
+          : seat
+      );
+      onChartChange(newChart);
+    } else if (isBoxSelecting) {
+      const containerRect = e.currentTarget.getBoundingClientRect();
+      const currentX = e.clientX - containerRect.left;
+      const currentY = e.clientY - containerRect.top;
+      
+      setBoxSelectEnd({ x: currentX, y: currentY });
+      
+      // Calculate which desks are in the selection box
+      const newSelection = new Set<number>();
+      const minX = Math.min(boxSelectStart.x, currentX);
+      const maxX = Math.max(boxSelectStart.x, currentX);
+      const minY = Math.min(boxSelectStart.y, currentY);
+      const maxY = Math.max(boxSelectStart.y, currentY);
+      
+      seats.forEach(seat => {
+        const layoutPos = layoutPositions.find(pos => pos.position === seat.position);
+        if (!layoutPos) return;
+        
+        const x = seat.customX ?? layoutPos.x;
+        const y = seat.customY ?? layoutPos.y;
+        
+        // Check if desk center is within selection box
+        if (x + 40 >= minX && x + 40 <= maxX && y + 40 >= minY && y + 40 <= maxY) {
+          newSelection.add(seat.position);
+        }
+      });
+      
+      // Merge with existing selection if Ctrl/Cmd is held
+      if (e.metaKey || e.ctrlKey) {
+        const combined = new Set([...selectedDesks, ...newSelection]);
+        setSelectedDesks(combined);
+      } else {
+        setSelectedDesks(newSelection);
+      }
+    } else if (isDraggingMultiple) {
+      const containerRect = e.currentTarget.getBoundingClientRect();
+      const currentX = e.clientX - containerRect.left;
+      const currentY = e.clientY - containerRect.top;
+      
+      const deltaX = currentX - multiDragOffset.x;
+      const deltaY = currentY - multiDragOffset.y;
+      
+      // Update all selected desks
+      const newChart = seats.map(seat => {
+        if (selectedDesks.has(seat.position)) {
+          const layoutPos = layoutPositions.find(pos => pos.position === seat.position);
+          if (!layoutPos) return seat;
+          
+          const currentX = seat.customX ?? layoutPos.x;
+          const currentY = seat.customY ?? layoutPos.y;
+          
+          return {
+            ...seat,
+            customX: Math.max(0, Math.min(900 - 80, currentX + deltaX)),
+            customY: Math.max(0, Math.min(600 - 80, currentY + deltaY))
+          };
+        }
+        return seat;
+      });
+      
+      onChartChange(newChart);
+      setMultiDragOffset({ x: currentX, y: currentY });
     }
   };
 
@@ -410,10 +509,84 @@ export default function SeatingChartGrid({
     }
   };
 
+  const handleContainerMouseDown = (e: React.MouseEvent) => {
+    // Don't start box select if we're already dragging something or if student drag is active
+    if (isDraggingTeacherDesk || isDraggingWhiteboard || isDraggingDoor || isDraggingDesk || draggedStudent) return;
+    
+    // Check if we clicked on a desk
+    const target = e.target as HTMLElement;
+    const deskElement = target.closest('[data-desk-position]');
+    
+    if (deskElement) {
+      // Clicked on a desk - handle desk selection/dragging
+      const position = parseInt(deskElement.getAttribute('data-desk-position') || '0');
+      handleDeskMouseDown(e, position);
+    } else {
+      // Clicked on empty space - start box select
+      const containerRect = e.currentTarget.getBoundingClientRect();
+      const startX = e.clientX - containerRect.left;
+      const startY = e.clientY - containerRect.top;
+      
+      // Clear selection if not holding Ctrl/Cmd
+      if (!e.metaKey && !e.ctrlKey) {
+        setSelectedDesks(new Set());
+      }
+      
+      setIsBoxSelecting(true);
+      setBoxSelectStart({ x: startX, y: startY });
+      setBoxSelectEnd({ x: startX, y: startY });
+    }
+  };
+
+  const handleDeskMouseDown = (e: React.MouseEvent, position: number) => {
+    // Prevent this from interfering with student drag and drop
+    if (draggedStudent) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Check if this desk is already selected and we're starting a multi-drag
+    if (selectedDesks.has(position)) {
+      setIsDraggingMultiple(true);
+      
+      const containerRect = e.currentTarget.closest('[data-testid="seating-chart-grid"]')?.getBoundingClientRect();
+      if (containerRect) {
+        setMultiDragOffset({
+          x: e.clientX - containerRect.left,
+          y: e.clientY - containerRect.top
+        });
+      }
+    } else {
+      // Single desk drag
+      setIsDraggingDesk(true);
+      setDraggingDeskPosition(position);
+      
+      const seat = seats.find(s => s.position === position);
+      const layoutPos = layoutPositions.find(pos => pos.position === position);
+      if (!seat || !layoutPos) return;
+      
+      // Use custom position if available, otherwise use layout position
+      const currentX = seat.customX ?? layoutPos.x;
+      const currentY = seat.customY ?? layoutPos.y;
+      
+      const containerRect = e.currentTarget.closest('[data-testid="seating-chart-grid"]')?.getBoundingClientRect();
+      if (containerRect) {
+        setDragOffset({
+          x: e.clientX - (containerRect.left + currentX),
+          y: e.clientY - (containerRect.top + currentY)
+        });
+      }
+    }
+  };
+
   const handleContainerMouseUp = () => {
     setIsDraggingTeacherDesk(false);
     setIsDraggingWhiteboard(false);
     setIsDraggingDoor(false);
+    setIsDraggingDesk(false);
+    setDraggingDeskPosition(null);
+    setIsBoxSelecting(false);
+    setIsDraggingMultiple(false);
   };
 
   const handleDragOver = (e: React.DragEvent, position: number) => {
@@ -442,30 +615,51 @@ export default function SeatingChartGrid({
     // Place student in new position (swap if occupied)
     const targetSeat = newChart[targetPosition];
     if (targetSeat.studentId && currentPosition !== -1) {
-      // Swap students
+      // Swap students - preserve custom positions for the seats themselves
       newChart[currentPosition] = { ...newChart[currentPosition], studentId: targetSeat.studentId };
     }
     
+    // Clear any custom positions when students are swapped via drag and drop
+    // The desk positions stay, but students move to default desk positions
     newChart[targetPosition] = { ...newChart[targetPosition], studentId: draggedStudent.id };
     
     onChartChange(newChart);
   };
 
-  const renderSeat = (seat: {position: number, studentId: string | null}, layoutPos: SeatPosition) => {
+  const renderSeat = (seat: {position: number, studentId: string | null, customX?: number, customY?: number}, layoutPos: SeatPosition) => {
     const student = getStudentById(seat.studentId);
     const isDragOver = dragOverPosition === seat.position;
+    const isBeingDragged = isDraggingDesk && draggingDeskPosition === seat.position;
+    const isSelected = selectedDesks.has(seat.position);
+    const isMultiDragging = isDraggingMultiple && isSelected;
+    
+    // Use custom position if available, otherwise use layout position
+    const x = seat.customX ?? layoutPos.x;
+    const y = seat.customY ?? layoutPos.y;
+    
     const seatStyle = {
       position: 'absolute' as const,
-      left: `${layoutPos.x}px`,
-      top: `${layoutPos.y}px`,
+      left: `${x}px`,
+      top: `${y}px`,
       transform: layoutPos.rotation ? `rotate(${layoutPos.rotation}deg)` : undefined,
       transformOrigin: 'center',
-      transition: 'all 0.3s ease'
+      transition: (isBeingDragged || isMultiDragging) ? 'none' : 'all 0.3s ease',
+      cursor: student ? 'move' : 'default',
+      zIndex: (isBeingDragged || isMultiDragging) ? 30 : 'auto'
     };
 
     if (student) {
       return (
-        <div key={`seat-${seat.position}`} style={seatStyle}>
+        <div 
+          key={`seat-${seat.position}`} 
+          style={seatStyle}
+          onMouseDown={(e) => handleDeskMouseDown(e, seat.position)}
+          data-desk-position={seat.position}
+          className={`
+            ${isBeingDragged || isMultiDragging ? 'shadow-lg scale-105' : ''}
+            ${isSelected ? 'ring-2 ring-blue-400 ring-offset-2' : ''}
+          `}
+        >
           <StudentSeat
             student={student}
             onDragStart={handleDragStart}
@@ -482,10 +676,17 @@ export default function SeatingChartGrid({
       <div
         key={`empty-${seat.position}`}
         style={seatStyle}
-        className={`drop-zone ${isDragOver ? 'drag-over' : ''}`}
+        className={`
+          drop-zone cursor-move
+          ${isDragOver ? 'drag-over' : ''}
+          ${isBeingDragged || isMultiDragging ? 'shadow-lg scale-105' : ''}
+          ${isSelected ? 'ring-2 ring-blue-400 ring-offset-2' : ''}
+        `}
         onDragOver={(e) => handleDragOver(e, seat.position)}
         onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, seat.position)}
+        onMouseDown={(e) => handleDeskMouseDown(e, seat.position)}
+        data-desk-position={seat.position}
         data-testid={`drop-zone-${seat.position}`}
       >
         <div className="w-20 h-20 border-2 border-dashed border-muted-foreground/30 rounded-lg flex items-center justify-center bg-muted/20 hover:bg-muted/40 transition-colors">
@@ -502,9 +703,10 @@ export default function SeatingChartGrid({
   return (
     <div className="classroom-container">
       <div 
-        className="relative bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-lg border p-4 overflow-hidden"
+        className="relative bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-lg border p-4 overflow-hidden select-none"
         style={{ width: `${roomWidth}px`, height: `${roomHeight}px`, minHeight: '500px' }}
         data-testid="seating-chart-grid"
+        onMouseDown={handleContainerMouseDown}
         onMouseMove={handleContainerMouseMove}
         onMouseUp={handleContainerMouseUp}
         onMouseLeave={handleContainerMouseUp}
@@ -589,6 +791,20 @@ export default function SeatingChartGrid({
             const layoutPos = layoutPositions.find(pos => pos.position === seat.position);
             return layoutPos ? renderSeat(seat, layoutPos) : null;
           })
+        )}
+
+        {/* Selection Box */}
+        {isBoxSelecting && (
+          <div
+            className="absolute border-2 border-blue-400 bg-blue-100 bg-opacity-20 pointer-events-none"
+            style={{
+              left: `${Math.min(boxSelectStart.x, boxSelectEnd.x)}px`,
+              top: `${Math.min(boxSelectStart.y, boxSelectEnd.y)}px`,
+              width: `${Math.abs(boxSelectEnd.x - boxSelectStart.x)}px`,
+              height: `${Math.abs(boxSelectEnd.y - boxSelectStart.y)}px`,
+              zIndex: 25
+            }}
+          />
         )}
       </div>
     </div>
