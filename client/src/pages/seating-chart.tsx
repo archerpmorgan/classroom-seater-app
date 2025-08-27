@@ -10,7 +10,7 @@ import UploadArea from "@/components/upload-area";
 import SeatingChartGrid from "@/components/seating-chart-grid";
 import StudentTable from "@/components/student-table";
 import { generateSeatingChart } from "@/lib/seating-algorithms";
-import { Download, Save, Users, ALargeSmall, UserCog, Shuffle, Eraser, Printer } from "lucide-react";
+import { Download, Save, Users, LayoutGrid, UserCog, Shuffle, Eraser, Printer } from "lucide-react";
 import type { Student, SeatingChart as SeatingChartType } from "@shared/schema";
 
 export default function SeatingChart() {
@@ -304,7 +304,7 @@ export default function SeatingChart() {
             <Card>
               <CardContent className="p-6">
                 <h2 className="text-lg font-semibold mb-4 text-card-foreground">
-                  <ALargeSmall className="w-5 h-5 inline mr-2 text-secondary" />
+                  <LayoutGrid className="w-5 h-5 inline mr-2 text-secondary" />
                   Classroom Layout
                 </h2>
                 
@@ -316,9 +316,17 @@ export default function SeatingChart() {
                   <div className="text-xs text-muted-foreground">
                     {getLayoutDescription(layout)}
                   </div>
-                  <div className="mt-2 flex justify-between text-xs">
-                    <span>Seats: {getSeatCount(layout, students.length)}</span>
-                    <span>Best for: {getLayoutPurpose(layout)}</span>
+                  <div className="mt-3 space-y-2">
+                    <div className="text-xs">
+                      <span className="font-medium text-muted-foreground">Seats:</span> 
+                      <span className="ml-1 text-foreground">{getSeatCount(layout, students.length)}</span>
+                    </div>
+                    <div className="text-xs">
+                      <span className="font-medium text-muted-foreground">Best for:</span>
+                      <div className="ml-0 mt-1 text-muted-foreground leading-relaxed">
+                        {getLayoutPurpose(layout)}
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
