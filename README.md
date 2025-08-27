@@ -187,27 +187,6 @@ ClassroomSeater/
 └── dist/                  # Built application files
 ```
 
-## 🎯 Use Cases
-
-### Elementary Teachers
-- **Behavior Management**: Separate students who distract each other
-- **Language Support**: Group bilingual students for mutual assistance
-- **Skill Mixing**: Pair advanced students with those needing help
-
-### Middle/High School Teachers
-- **Collaborative Learning**: Use group tables for project-based work
-- **Discussion Formats**: Horseshoe layouts for Socratic seminars
-- **Differentiated Instruction**: Skill clustering for targeted lessons
-
-### University Professors
-- **Large Class Management**: Stadium layouts for lecture halls
-- **Seminar Discussions**: Circle arrangements for graduate courses
-- **Research Groups**: Flexible layouts for lab and research settings
-
-## 🤝 Contributing
-
-This project is designed for educators and developers who want to improve classroom management tools. Contributions are welcome!
-
 ### Development Scripts
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
