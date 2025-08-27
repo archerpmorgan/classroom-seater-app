@@ -204,6 +204,70 @@ export default function SeatingChart() {
     }
   };
 
+  const handleDownloadUpdatedCSV = () => {
+    try {
+      if (students.length === 0) {
+        toast({
+          title: "No Students",
+          description: "No students to export",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create CSV headers
+      const headers = [
+        'Name',
+        'Primary Language',
+        'Secondary Languages',
+        'Skill Level',
+        'Works Well With',
+        'Avoid Pairing',
+        'Notes'
+      ];
+
+      // Convert students to CSV rows
+      const csvRows = students.map(student => [
+        student.name,
+        student.primaryLanguage,
+        (student.secondaryLanguages || []).join(', '),
+        student.skillLevel,
+        (student.worksWellWith || []).join(', '),
+        (student.avoidPairing || []).join(', '),
+        student.notes || ''
+      ]);
+
+      // Combine headers and rows
+      const csvContent = [headers, ...csvRows]
+        .map(row => row.map(field => `"${field}"`).join(','))
+        .join('\n');
+
+      // Create and download the file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `students-updated-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Success",
+        description: `Exported ${students.length} students to CSV`,
+      });
+
+    } catch (error) {
+      console.error('Error downloading updated CSV:', error);
+      toast({
+        title: "Error",
+        description: "Failed to download updated CSV",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handlePrintChart = () => {
     window.print();
   };
@@ -336,6 +400,16 @@ export default function SeatingChart() {
               >
                 <Download className="w-4 h-4 mr-2" />
                 Download Layout as Image
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={handleDownloadUpdatedCSV}
+                disabled={students.length === 0}
+                data-testid="button-download-updated-csv"
+                title="Download Updated CSV"
+              >
+                <Download className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -501,7 +575,7 @@ export default function SeatingChart() {
             <Card>
               <CardContent className="p-6">
                 <h2 className="text-lg font-semibold mb-4 text-card-foreground">
-                  <UserCog className="w-5 h-5 inline mr-2 text-accent" />
+                  <Users className="w-5 h-5 inline mr-2 text-accent" />
                   Grouping Strategy
                 </h2>
                 

@@ -14,7 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertStudentSchema } from "@shared/schema";
-import { Edit, Plus, Users } from "lucide-react";
+import { Edit, Plus, UserCog } from "lucide-react";
 import type { Student, InsertStudent } from "@shared/schema";
 import { z } from "zod";
 
@@ -165,7 +165,7 @@ export default function StudentTable({ students, isLoading }: StudentTableProps)
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-card-foreground">
-            <Users className="w-6 h-6 inline mr-2 text-secondary" />
+            <UserCog className="w-6 h-6 inline mr-2 text-secondary" />
             Student Information
           </h2>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

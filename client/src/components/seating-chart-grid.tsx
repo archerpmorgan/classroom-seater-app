@@ -26,6 +26,13 @@ export default function SeatingChartGrid({
 }: SeatingChartGridProps) {
   const [draggedStudent, setDraggedStudent] = useState<Student | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<number | null>(null);
+  const [teacherDeskPosition, setTeacherDeskPosition] = useState({ x: 50, y: 80 });
+  const [isDraggingTeacherDesk, setIsDraggingTeacherDesk] = useState(false);
+  const [whiteboardPosition, setWhiteboardPosition] = useState({ x: 350, y: 15 });
+  const [isDraggingWhiteboard, setIsDraggingWhiteboard] = useState(false);
+  const [doorPosition, setDoorPosition] = useState({ x: 820, y: 80 });
+  const [isDraggingDoor, setIsDraggingDoor] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   const getSeatCount = (layoutType: string, studentCount: number) => {
     // For groups layout, always show complete groups (4 seats per group)
@@ -72,20 +79,19 @@ export default function SeatingChartGrid({
 
     switch (layoutType) {
       case 'traditional-rows': {
-        // Dynamic rows based on student count - allow seats in front of teacher desk
+        // Dynamic rows based on student count - centered in room, teacher desk floats
         const seatsPerRow = 5;
         const rowsNeeded = Math.ceil(seatCount / seatsPerRow);
         let position = 0;
         
+        // Calculate center position for the row
+        const rowWidth = seatsPerRow * 120; // Width of one row
+        const startX = (900 - rowWidth) / 2; // Center the row in 900px room
+        
         for (let row = 0; row < rowsNeeded && position < seatCount; row++) {
           for (let col = 0; col < seatsPerRow && position < seatCount; col++) {
-            let x = col * 120 + 60; // Start at x=60 (allows seats in front of desk)
-            let y = row * 100 + 100; // Start at y=100 to avoid whiteboard
-            
-            // If this position overlaps with teacher desk, adjust it
-            if (isOverlappingTeacherDesk(x, y)) {
-              x = 120; // Move to the right of the desk
-            }
+            let x = startX + col * 120; // Centered row
+            let y = row * 100 + 140; // Start at y=140 (more space from front/whiteboard)
             
             positions.push({
               position: position++,
@@ -98,13 +104,14 @@ export default function SeatingChartGrid({
       }
 
       case 'stadium': {
-        // V-shaped angled rows for better sightlines - allow seats in front of teacher desk
+        // V-shaped angled rows for better sightlines - centered in room
         let position = 0;
         const rowSeats = [5, 6, 7, 6]; // Slightly fewer seats per row
         
         for (let row = 0; row < 4 && position < seatCount; row++) {
           const seatsInThisRow = Math.min(rowSeats[row], seatCount - position);
-          let startX = (6 - seatsInThisRow) * 60 + 60; // Start at x=60 (allows seats in front of desk)
+          const rowWidth = seatsInThisRow * 120; // Width of this row
+          let startX = (900 - rowWidth) / 2; // Center the row in 900px room
           const angleOffset = row * 20;
           
           for (let col = 0; col < seatsInThisRow; col++) {
@@ -112,12 +119,7 @@ export default function SeatingChartGrid({
             const distanceFromCenter = Math.abs(col - centerCol);
             
             let x = startX + col * 120 + (row > 0 ? distanceFromCenter * angleOffset : 0);
-            let y = row * 120 + 100; // Start lower to avoid whiteboard
-            
-            // If this position overlaps with teacher desk, adjust it
-            if (isOverlappingTeacherDesk(x, y)) {
-              x = 120; // Move to the right of the desk
-            }
+            let y = row * 120 + 140; // Start at y=140 (more space from front/whiteboard)
             
             positions.push({
               position: position++,
@@ -258,25 +260,21 @@ export default function SeatingChartGrid({
         let position = 0;
         const groupsNeeded = Math.ceil(seatCount / 4);
         const groupPositions = [
-          { x: 150, y: 120 }, { x: 400, y: 120 }, { x: 650, y: 120 },
-          { x: 150, y: 320 }, { x: 400, y: 320 }, { x: 650, y: 320 }
+          { x: 150, y: 160 }, { x: 400, y: 160 }, { x: 650, y: 160 },  // Moved down for more front space
+          { x: 150, y: 360 }, { x: 400, y: 360 }, { x: 650, y: 360 }   // Moved down for more front space
         ];
         
         for (let g = 0; g < groupsNeeded && g < groupPositions.length; g++) {
           const groupCenter = groupPositions[g];
+          // Balanced spacing within groups - good horizontal, fixed vertical
           const seats = [
-            { x: -40, y: -30 }, { x: 40, y: -30 },
-            { x: -40, y: 30 }, { x: 40, y: 30 }
+            { x: -42, y: -42 }, { x: 42, y: -42 },  // Top row: keep horizontal, increase vertical
+            { x: -42, y: 42 }, { x: 42, y: 42 }     // Bottom row: keep horizontal, increase vertical
           ];
           
           seats.forEach(seatOffset => {
             let x = groupCenter.x + seatOffset.x;
             let y = groupCenter.y + seatOffset.y;
-            
-            // If this position overlaps with teacher desk, adjust it
-            if (isOverlappingTeacherDesk(x, y)) {
-              x = 120; // Move to the right of the desk
-            }
             
             positions.push({
               position: position++,
@@ -290,22 +288,22 @@ export default function SeatingChartGrid({
       }
 
       case 'pairs': {
-        // Dynamic pairs based on student count - use overlap detection
+        // Dynamic pairs based on student count - centered in room
         let position = 0;
         const pairsNeeded = Math.ceil(seatCount / 2);
         const columns = 3; // 3 columns of pairs
         const rowsNeeded = Math.ceil(pairsNeeded / columns);
         
+        // Calculate center position for the pairs layout
+        const pairWidth = 160; // Width of one pair (2 seats * 80px spacing)
+        const totalWidth = columns * 200; // Total width of all columns
+        const startX = (900 - totalWidth) / 2; // Center the pairs layout in 900px room
+        
         for (let row = 0; row < rowsNeeded && position < seatCount; row++) {
           for (let pairCol = 0; pairCol < columns && position < seatCount; pairCol++) {
             for (let seat = 0; seat < 2 && position < seatCount; seat++) {
-              let x = pairCol * 200 + seat * 80 + 60; // Reduced spacing for 3 columns (200 instead of 280)
-              let y = row * 120 + 100; // Start lower to avoid whiteboard
-              
-              // If this position overlaps with teacher desk, adjust it
-              if (isOverlappingTeacherDesk(x, y)) {
-                x = 120; // Move to the right of the desk
-              }
+              let x = startX + pairCol * 200 + seat * 80; // Centered pairs layout
+              let y = row * 120 + 140; // Start at y=140 (more space from front/whiteboard)
               
               positions.push({
                 position: position++,
@@ -350,6 +348,72 @@ export default function SeatingChartGrid({
   const handleDragEnd = () => {
     setDraggedStudent(null);
     setDragOverPosition(null);
+  };
+
+  const handleTeacherDeskMouseDown = (e: React.MouseEvent) => {
+    setIsDraggingTeacherDesk(true);
+    const rect = e.currentTarget.getBoundingClientRect();
+    const containerRect = e.currentTarget.closest('[data-testid="seating-chart-grid"]')?.getBoundingClientRect();
+    if (containerRect) {
+      setDragOffset({
+        x: e.clientX - (containerRect.left + teacherDeskPosition.x),
+        y: e.clientY - (containerRect.top + teacherDeskPosition.y)
+      });
+    }
+  };
+
+  const handleContainerMouseMove = (e: React.MouseEvent) => {
+    if (isDraggingTeacherDesk) {
+      const containerRect = e.currentTarget.getBoundingClientRect();
+      setTeacherDeskPosition({
+        x: Math.max(0, Math.min(900 - 100, e.clientX - containerRect.left - dragOffset.x)),
+        y: Math.max(0, Math.min(600 - 80, e.clientY - containerRect.top - dragOffset.y))
+      });
+    } else if (isDraggingWhiteboard) {
+      const containerRect = e.currentTarget.getBoundingClientRect();
+      setWhiteboardPosition({
+        x: Math.max(0, Math.min(900 - 200, e.clientX - containerRect.left - dragOffset.x)),
+        y: Math.max(0, Math.min(600 - 40, e.clientY - containerRect.top - dragOffset.y))
+      });
+    } else if (isDraggingDoor) {
+      const containerRect = e.currentTarget.getBoundingClientRect();
+      setDoorPosition({
+        x: Math.max(0, Math.min(900 - 45, e.clientX - containerRect.left - dragOffset.x)),
+        y: Math.max(0, Math.min(600 - 120, e.clientY - containerRect.top - dragOffset.y))
+      });
+    }
+  };
+
+  const handleTeacherDeskMouseUp = () => {
+    setIsDraggingTeacherDesk(false);
+  };
+
+  const handleWhiteboardMouseDown = (e: React.MouseEvent) => {
+    setIsDraggingWhiteboard(true);
+    const containerRect = e.currentTarget.closest('[data-testid="seating-chart-grid"]')?.getBoundingClientRect();
+    if (containerRect) {
+      setDragOffset({
+        x: e.clientX - (containerRect.left + whiteboardPosition.x),
+        y: e.clientY - (containerRect.top + whiteboardPosition.y)
+      });
+    }
+  };
+
+  const handleDoorMouseDown = (e: React.MouseEvent) => {
+    setIsDraggingDoor(true);
+    const containerRect = e.currentTarget.closest('[data-testid="seating-chart-grid"]')?.getBoundingClientRect();
+    if (containerRect) {
+      setDragOffset({
+        x: e.clientX - (containerRect.left + doorPosition.x),
+        y: e.clientY - (containerRect.top + doorPosition.y)
+      });
+    }
+  };
+
+  const handleContainerMouseUp = () => {
+    setIsDraggingTeacherDesk(false);
+    setIsDraggingWhiteboard(false);
+    setIsDraggingDoor(false);
   };
 
   const handleDragOver = (e: React.DragEvent, position: number) => {
@@ -424,35 +488,65 @@ export default function SeatingChartGrid({
         onDrop={(e) => handleDrop(e, seat.position)}
         data-testid={`drop-zone-${seat.position}`}
       >
-        <div className="w-16 h-16 border-2 border-dashed border-muted-foreground/30 rounded-lg flex items-center justify-center bg-muted/20 hover:bg-muted/40 transition-colors">
-          <span className="text-xs text-muted-foreground">{seat.position + 1}</span>
+        <div className="w-20 h-20 border-2 border-dashed border-muted-foreground/30 rounded-lg flex items-center justify-center bg-muted/20 hover:bg-muted/40 transition-colors">
+          <span className="text-xs text-muted-foreground">Empty</span>
         </div>
       </div>
     );
   };
 
-  // Calculate classroom dimensions based on layout positions
-  const maxX = layoutPositions.length > 0 ? Math.max(...layoutPositions.map(p => p.x)) + 100 : 600;
-  const maxY = layoutPositions.length > 0 ? Math.max(...layoutPositions.map(p => p.y)) + 100 : 500;
+  // Use fixed room dimensions for consistent centering
+  const roomWidth = 900;
+  const roomHeight = layoutPositions.length > 0 ? Math.max(...layoutPositions.map(p => p.y)) + 200 : 600;
 
   return (
     <div className="classroom-container">
       <div 
         className="relative bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-lg border p-4 overflow-hidden"
-        style={{ width: `${maxX}px`, height: `${maxY}px`, minHeight: '500px' }}
+        style={{ width: `${roomWidth}px`, height: `${roomHeight}px`, minHeight: '500px' }}
         data-testid="seating-chart-grid"
+        onMouseMove={handleContainerMouseMove}
+        onMouseUp={handleContainerMouseUp}
+        onMouseLeave={handleContainerMouseUp}
       >
-        {/* Teacher Desk - Upper Left Corner */}
+
+
+        {/* Draggable Whiteboard */}
         <div 
-          className="absolute bg-amber-100 dark:bg-amber-900/30 border-2 border-amber-300 dark:border-amber-600 rounded-lg shadow-md"
+          className={`absolute bg-slate-200 dark:bg-slate-700 border-2 border-slate-400 dark:border-slate-500 rounded-md shadow-lg cursor-move select-none ${
+            isDraggingWhiteboard ? 'shadow-xl scale-105' : ''
+          }`}
           style={{ 
-            left: '20px', 
-            top: '20px', 
-            width: '80px', 
-            height: '60px',
-            zIndex: 15 
+            left: `${whiteboardPosition.x}px`, 
+            top: `${whiteboardPosition.y}px`, 
+            width: '200px', 
+            height: '40px',
+            zIndex: 15,
+            transition: isDraggingWhiteboard ? 'none' : 'transform 0.2s ease'
+          }}
+          data-testid="whiteboard"
+          onMouseDown={handleWhiteboardMouseDown}
+        >
+          <div className="flex items-center justify-center h-full text-slate-600 dark:text-slate-300">
+            <div className="text-sm font-medium">📋 Whiteboard</div>
+          </div>
+        </div>
+
+        {/* Draggable Teacher Desk */}
+        <div 
+          className={`absolute bg-amber-100 dark:bg-amber-900/30 border-2 border-amber-300 dark:border-amber-600 rounded-lg shadow-md cursor-move select-none ${
+            isDraggingTeacherDesk ? 'shadow-lg scale-105' : ''
+          }`}
+          style={{ 
+            left: `${teacherDeskPosition.x}px`, 
+            top: `${teacherDeskPosition.y}px`, 
+            width: '100px', 
+            height: '80px',
+            zIndex: 20,
+            transition: isDraggingTeacherDesk ? 'none' : 'transform 0.2s ease'
           }}
           data-testid="teacher-desk"
+          onMouseDown={handleTeacherDeskMouseDown}
         >
           <div className="flex flex-col items-center justify-center h-full text-amber-700 dark:text-amber-300">
             <div className="text-lg">🪑</div>
@@ -460,21 +554,25 @@ export default function SeatingChartGrid({
           </div>
         </div>
 
-        {/* Whiteboard - Front Center */}
+        {/* Draggable Door */}
         <div 
-          className="absolute bg-slate-200 dark:bg-slate-700 border-2 border-slate-400 dark:border-slate-500 rounded-md shadow-lg"
+          className={`absolute bg-green-100 dark:bg-green-900/30 border-2 border-green-300 dark:border-green-600 rounded-lg shadow-md cursor-move select-none ${
+            isDraggingDoor ? 'shadow-lg scale-105' : ''
+          }`}
           style={{ 
-            left: '50%', 
-            top: '15px', 
-            width: '200px', 
-            height: '40px',
-            transform: 'translateX(-50%)',
-            zIndex: 15 
+            left: `${doorPosition.x}px`, 
+            top: `${doorPosition.y}px`, 
+            width: '45px', 
+            height: '120px',
+            zIndex: 20,
+            transition: isDraggingDoor ? 'none' : 'transform 0.2s ease'
           }}
-          data-testid="whiteboard"
+          data-testid="door"
+          onMouseDown={handleDoorMouseDown}
         >
-          <div className="flex items-center justify-center h-full text-slate-600 dark:text-slate-300">
-            <div className="text-sm font-medium">📋 Whiteboard</div>
+          <div className="flex flex-col items-center justify-center h-full text-green-700 dark:text-green-300">
+            <div className="text-3xl mb-1">🚪</div>
+            <div className="text-[10px] font-medium text-center leading-tight">Door</div>
           </div>
         </div>
 
