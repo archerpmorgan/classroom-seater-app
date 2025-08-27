@@ -26,6 +26,10 @@ export default function StudentSeat({
     }
   };
 
+  const getFirstName = () => {
+    return student.name.split(' ')[0];
+  };
+
   const getLanguagesDisplay = () => {
     const languages = [student.primaryLanguage, ...(student.secondaryLanguages || [])];
     return languages.slice(0, 2).join('/');
@@ -44,7 +48,7 @@ export default function StudentSeat({
 
   return (
     <div
-      className={`student-seat bg-background border-2 border-border rounded-lg p-3 text-center shadow-sm ${
+      className={`student-seat bg-background border-2 border-border rounded-lg p-2 text-center shadow-sm min-w-20 min-h-20 flex flex-col justify-center ${
         isDragging ? 'opacity-50' : ''
       }`}
       draggable
@@ -52,16 +56,17 @@ export default function StudentSeat({
       onDragEnd={handleDragEnd}
       data-testid={`student-seat-${student.id}`}
       data-student-id={student.id}
+      title={`${student.name} - ${student.skillLevel} - ${getLanguagesDisplay()}`}
     >
-      <div className="text-sm font-medium text-foreground truncate" title={student.name}>
-        {student.name}
+      <div className="text-sm font-bold text-foreground leading-tight" style={{fontSize: '13px'}}>
+        {getFirstName()}
       </div>
-      <div className="text-xs text-muted-foreground mt-1 truncate" title={getLanguagesDisplay()}>
+      <div className="text-xs text-muted-foreground mt-1 leading-tight" style={{fontSize: '10px'}}>
         {getLanguagesDisplay()}
       </div>
-      <div className="flex justify-center mt-2">
+      <div className="flex justify-center mt-1">
         <span 
-          className={`inline-block w-3 h-3 rounded-full ${getSkillLevelColor(student.skillLevel)}`}
+          className={`inline-block w-2 h-2 rounded-full ${getSkillLevelColor(student.skillLevel)}`}
           title={student.skillLevel}
         />
       </div>

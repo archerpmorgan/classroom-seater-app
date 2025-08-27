@@ -86,10 +86,13 @@
 .student-seat {
   transition: all 0.2s ease;
   cursor: move;
-  width: 4rem;
-  height: 4rem;
+  width: 5rem;
+  height: 5rem;
   position: relative;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .student-seat:hover {
@@ -112,6 +115,11 @@
 
 .drop-zone:hover {
   transform: scale(1.05);
+}
+
+.drop-zone {
+  width: 5rem;
+  height: 5rem;
 }
 
 .drag-over {
