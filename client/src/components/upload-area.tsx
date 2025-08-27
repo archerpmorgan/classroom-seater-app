@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { FileUp, Download } from "lucide-react";
+import { getApiUrl } from "@/lib/config";
 
 export default function UploadArea() {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -15,7 +16,7 @@ export default function UploadArea() {
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await fetch('/api/students/upload-csv', {
+      const response = await fetch(getApiUrl('/api/students/upload-csv'), {
         method: 'POST',
         body: formData,
       });

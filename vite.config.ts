@@ -16,6 +16,10 @@ export default defineConfig({
         ]
       : []),
   ],
+  define: {
+    // Expose environment variables to the client
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+  },
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
