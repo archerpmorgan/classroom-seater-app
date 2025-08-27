@@ -12,3 +12,24 @@ Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
 3:23:23 PM [express] POST /api/students/upload-csv 200 in 20ms :: {"message":"Successfully imported …
 3:23:23 PM [express] GET /api/students 200 in 1ms :: [{"name":"Alex Chen","primaryLanguage":"English…
 3:24:15 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:26:57 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:27:12 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:27:56 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:28:28 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:29:51 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:31:26 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:31:36 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:31:47 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:31:59 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:32:07 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:32:18 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:32:32 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:32:56 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:33:30 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:33:41 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:33:54 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:33:54 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:34:31 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:34:52 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:35:10 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_
+3:36:46 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=FToZNnnV9dxhM-DYolBx_

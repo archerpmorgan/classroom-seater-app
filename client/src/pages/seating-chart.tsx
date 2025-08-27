@@ -10,7 +10,7 @@ import UploadArea from "@/components/upload-area";
 import SeatingChartGrid from "@/components/seating-chart-grid";
 import StudentTable from "@/components/student-table";
 import { generateSeatingChart } from "@/lib/seating-algorithms";
-import { Download, Save, GraduationCap, LayoutGrid, UserCog, Shuffle, Eraser, Printer, Users, Database, Eye, EyeOff, ArrowLeftRight, X } from "lucide-react";
+import { Download, Save, GraduationCap, LayoutGrid, UserCog, Shuffle, Eraser, Printer, Users, Database, Eye, EyeOff, ArrowLeftRight, X, Undo2 } from "lucide-react";
 import type { Student, SeatingChart as SeatingChartType } from "@shared/schema";
 
 export default function SeatingChart() {
@@ -22,6 +22,10 @@ export default function SeatingChart() {
   const [isSwapModalOpen, setIsSwapModalOpen] = useState(false);
   const [firstStudentId, setFirstStudentId] = useState<string>('');
   const [secondStudentId, setSecondStudentId] = useState<string>('');
+  
+  // Undo system state
+  const [chartHistory, setChartHistory] = useState<{position: number, studentId: string | null, customX?: number, customY?: number}[][]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -37,7 +41,53 @@ export default function SeatingChart() {
   // Clear chart when students change or layout changes
   useEffect(() => {
     setCurrentChart([]);
+    // Clear undo history when students or layout changes
+    setChartHistory([]);
+    setHistoryIndex(-1);
   }, [students.length, layout]);
+
+  // Function to save current state to history
+  const saveToHistory = (newChart: {position: number, studentId: string | null, customX?: number, customY?: number}[]) => {
+    const chartCopy = JSON.parse(JSON.stringify(newChart)); // Deep copy
+    
+    // Remove any history after current index (if we're not at the end)
+    const newHistory = chartHistory.slice(0, historyIndex + 1);
+    newHistory.push(chartCopy);
+    
+    setChartHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
+  // Function to save to history without triggering the onChartChange callback
+  const saveToHistorySilently = (newChart: {position: number, studentId: string | null, customX?: number, customY?: number}[]) => {
+    const chartCopy = JSON.parse(JSON.stringify(newChart)); // Deep copy
+    
+    // Remove any history after current index (if we're not at the end)
+    const newHistory = chartHistory.slice(0, historyIndex + 1);
+    newHistory.push(chartCopy);
+    
+    setChartHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
+  // Function to handle undo
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setIsRestoringFromHistory(true);
+      setCurrentChart(JSON.parse(JSON.stringify(chartHistory[newIndex])));
+      setIsRestoringFromHistory(false);
+      
+      toast({
+        title: "Undo",
+        description: "Previous change reverted",
+      });
+    }
+  };
+
+  // State to track if we're restoring from history
+  const [isRestoringFromHistory, setIsRestoringFromHistory] = useState(false);
 
   const deleteAllStudentsMutation = useMutation({
     mutationFn: () => apiRequest('DELETE', '/api/students'),
@@ -113,6 +163,8 @@ export default function SeatingChart() {
       const totalSeats = getSeatCount(layout, students.length);
       const chart = generateSeatingChart(students, strategy, totalSeats);
       setCurrentChart(chart);
+      // Save initial chart to history
+      saveToHistory(chart);
       
       toast({
         title: "Success",
@@ -147,6 +199,8 @@ export default function SeatingChart() {
       studentId: shuffled[index]?.id || null,
     }));
     setCurrentChart(newChart);
+    // Save to history after shuffle
+    saveToHistory(newChart);
   };
 
   const handleClearChart = () => {
@@ -300,6 +354,8 @@ export default function SeatingChart() {
     newChart[secondStudentPosition] = { ...newChart[secondStudentPosition], studentId: firstStudentId };
 
     setCurrentChart(newChart);
+    // Save to history after swap
+    saveToHistory(newChart);
     setIsSwapModalOpen(false);
     setFirstStudentId('');
     setSecondStudentId('');
@@ -388,10 +444,7 @@ export default function SeatingChart() {
     }
   };
 
-  const uniqueLanguages = Array.from(new Set(students.flatMap(s => [s.primaryLanguage, ...(s.secondaryLanguages || [])]))).length;
-  const constraintCount = students.reduce((count, student) => 
-    count + (student.worksWellWith?.length || 0) + (student.avoidPairing?.length || 0), 0
-  );
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -463,6 +516,16 @@ export default function SeatingChart() {
               >
                 <ArrowLeftRight className="w-4 h-4" />
               </Button>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={handleUndo}
+                disabled={historyIndex <= 0}
+                data-testid="button-undo"
+                title={`Undo Last Change${historyIndex > 0 ? ` (${historyIndex} steps available)` : ''}`}
+              >
+                <Undo2 className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         </div>
@@ -482,25 +545,54 @@ export default function SeatingChart() {
                   Student Data
                 </h2>
                 
-                <UploadArea />
-                
-                {/* Data Summary */}
-                <div className="bg-muted rounded-md p-3 mt-4">
-                  <div className="text-sm">
-                    <div className="flex justify-between mb-1">
-                      <span className="text-muted-foreground">Students:</span>
-                      <span className="font-medium" data-testid="text-student-count">{students.length}</span>
+                {students.length === 0 ? (
+                  <>
+                    <UploadArea />
+                    
+                    {/* Empty State */}
+                    <div className="bg-muted rounded-md p-3 mt-4">
+                      <div className="text-sm text-center text-muted-foreground">
+                        <div className="text-lg mb-2">📊</div>
+                        <div className="font-medium mb-1">No Students Loaded</div>
+                        <div className="text-xs">Upload a CSV file to get started</div>
+                      </div>
                     </div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-muted-foreground">Languages:</span>
-                      <span className="font-medium" data-testid="text-language-count">{uniqueLanguages}</span>
+                  </>
+                ) : (
+                  <>
+                    {/* Data Summary - Loaded State */}
+                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                          <span className="text-sm font-medium text-green-700 dark:text-green-300">Data Loaded</span>
+                        </div>
+                        <span className="text-xs text-green-600 dark:text-green-400">✓ Ready</span>
+                      </div>
+                      <div className="text-sm">
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Students:</span>
+                          <span className="font-semibold text-foreground" data-testid="text-student-count">{students.length}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Constraints:</span>
-                      <span className="font-medium" data-testid="text-constraint-count">{constraintCount}</span>
+                    
+                    {/* Clear Data Button */}
+                    <div className="mt-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => deleteAllStudentsMutation.mutate()}
+                        disabled={deleteAllStudentsMutation.isPending}
+                        className="w-full text-xs"
+                        data-testid="button-clear-student-data"
+                      >
+                        <Eraser className="w-3 h-3 mr-2" />
+                        Clear All Students
+                      </Button>
                     </div>
-                  </div>
-                </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 
@@ -707,16 +799,6 @@ export default function SeatingChart() {
                     <Printer className="w-4 h-4 mr-2 text-muted-foreground" />
                     Print Chart
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start text-sm text-destructive hover:text-destructive" 
-                    onClick={() => deleteAllStudentsMutation.mutate()}
-                    disabled={students.length === 0 || deleteAllStudentsMutation.isPending}
-                    data-testid="button-clear-all-students"
-                  >
-                    <Eraser className="w-4 h-4 mr-2" />
-                    Clear All Students
-                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -753,7 +835,14 @@ export default function SeatingChart() {
                   layout={layout}
                   students={students}
                   currentChart={currentChart}
-                  onChartChange={setCurrentChart}
+                  onChartChange={(newChart) => {
+                    setCurrentChart(newChart);
+                    // Save to history when chart changes (desk movements, etc.)
+                    // but not when restoring from history
+                    if (!isRestoringFromHistory) {
+                      saveToHistory(newChart);
+                    }
+                  }}
                   privacyMode={privacyMode}
                 />
                 
