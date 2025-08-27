@@ -10,7 +10,7 @@ import UploadArea from "@/components/upload-area";
 import SeatingChartGrid from "@/components/seating-chart-grid";
 import StudentTable from "@/components/student-table";
 import { generateSeatingChart } from "@/lib/seating-algorithms";
-import { Download, Save, GraduationCap, LayoutGrid, UserCog, Shuffle, Eraser, Users, Database, Eye, EyeOff, ArrowLeftRight, X, Undo2, Plus, RefreshCw, Camera } from "lucide-react";
+import { Download, Save, GraduationCap, LayoutGrid, UserCog, Shuffle, Eraser, Users, Database, Eye, EyeOff, ArrowLeftRight, X, Undo2, Plus, RefreshCw, Camera, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Student, SeatingChart as SeatingChartType } from "@shared/schema";
 
@@ -490,6 +490,26 @@ export default function SeatingChart() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <h1 className="text-xl font-semibold text-foreground">Classroom Seating Chart Generator</h1>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <Info className="w-4 h-4 text-muted-foreground" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm">
+                  <p className="text-sm">
+                    An app for creating classroom seating charts. See the repo at{" "}
+                    <a 
+                      href="https://github.com/archerpmorgan/classroom-seater-app" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:text-blue-600 underline"
+                    >
+                      GitHub
+                    </a>
+                  </p>
+                </TooltipContent>
+              </Tooltip>
             </div>
             <TooltipProvider>
               <div className="flex items-center space-x-4">

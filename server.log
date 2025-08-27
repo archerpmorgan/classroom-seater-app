@@ -2,10 +2,11 @@
 > rest-express@1.0.0 dev
 > NODE_ENV=development tsx server/index.ts
 
-7:27:06 PM [express] serving on localhost:3001
-7:27:07 PM [express] GET /api/students 200 in 5ms :: []
+7:44:57 PM [express] serving on localhost:3000
+7:44:58 PM [express] GET /api/students 200 in 4ms :: []
 Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
   npx update-browserslist-db@latest
   Why you should do it regularly: https://github.com/browserslist/update-db#readme
-7:27:18 PM [express] GET /api/students 200 in 1ms :: []
-7:27:18 PM [express] GET /api/seating-charts 200 in 1ms :: []
+7:45:02 PM [express] GET /api/seating-charts 304 in 0ms :: []
+7:45:02 PM [express] GET /api/students 304 in 0ms :: []
+7:45:52 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=Grci4ZU86r-BRyKM9JDH4
