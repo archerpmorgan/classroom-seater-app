@@ -61,110 +61,131 @@
   }
 }
 
+/* Classroom Container Styles */
+.classroom-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 1rem;
+  overflow-x: auto;
+  width: 100%;
+}
+
+.classroom-container .relative {
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+  position: relative;
+  background: linear-gradient(135deg, hsl(210, 20%, 98%) 0%, hsl(210, 15%, 95%) 100%);
+}
+
+.dark .classroom-container .relative {
+  background: linear-gradient(135deg, hsl(210, 10%, 12%) 0%, hsl(210, 8%, 8%) 100%);
+  box-shadow: inset 0 0 20px rgba(255,255,255,0.05);
+}
+
+/* Enhanced Student Seat Styles */
 .student-seat {
   transition: all 0.2s ease;
   cursor: move;
+  width: 4rem;
+  height: 4rem;
+  position: relative;
+  z-index: 1;
 }
 
 .student-seat:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.dark .student-seat:hover {
+  box-shadow: 0 6px 16px rgba(255, 255, 255, 0.1);
+}
+
+/* Drop Zone Styles */
+.drop-zone {
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  z-index: 0;
+}
+
+.drop-zone:hover {
+  transform: scale(1.05);
 }
 
 .drag-over {
-  border: 2px dashed hsl(210, 60%, 50%);
-  background-color: hsl(210, 60%, 98%);
+  border: 2px dashed hsl(210, 60%, 50%) !important;
+  background: hsl(210, 60%, 50%, 0.15) !important;
+  box-shadow: 0 0 0 3px hsl(210, 60%, 50%, 0.3) !important;
+  transform: scale(1.1) !important;
 }
 
-.classroom-grid {
-  display: grid;
-  gap: 12px;
-  padding: 20px;
-  background: hsl(210, 30%, 96%);
-  border-radius: var(--radius);
-  min-height: 400px;
+/* Layout-specific visual enhancements */
+.traditional-rows-layout .student-seat {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Traditional classroom layouts */
-.traditional-rows-layout {
-  grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: repeat(5, 1fr);
+.stadium-layout .student-seat {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
 }
 
-.stadium-layout {
-  grid-template-columns: repeat(7, 1fr);
-  grid-template-rows: repeat(4, 1fr);
-  transform: perspective(800px) rotateX(5deg);
+.horseshoe-layout .student-seat,
+.double-horseshoe-layout .student-seat {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  border: 1px solid hsl(210, 60%, 50%, 0.2);
 }
 
-.horseshoe-layout {
-  grid-template-columns: repeat(8, 1fr);
-  grid-template-rows: repeat(4, 1fr);
-  border-radius: 50% 50% 0 0;
-}
-
-.double-horseshoe-layout {
-  grid-template-columns: repeat(8, 1fr);
-  grid-template-rows: repeat(4, 1fr);
-}
-
-.circle-layout {
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(4, 1fr);
+.circle-layout .student-seat {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 2px solid hsl(210, 60%, 50%, 0.3);
   border-radius: 50%;
-  aspect-ratio: 1;
 }
 
-.groups-layout {
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(6, 1fr);
-  gap: 20px;
+.groups-layout .student-seat {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+  border: 2px solid hsl(150, 40%, 45%, 0.3);
+  background: linear-gradient(135deg, hsl(150, 40%, 98%) 0%, hsl(150, 40%, 95%) 100%);
 }
 
-.pairs-layout {
-  grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(4, 1fr);
-  gap: 8px;
+.dark .groups-layout .student-seat {
+  background: linear-gradient(135deg, hsl(150, 40%, 15%) 0%, hsl(150, 40%, 10%) 100%);
 }
 
-/* Special positioning for complex layouts */
-.horseshoe-layout .student-seat:nth-child(n+17),
-.horseshoe-layout .drop-zone:nth-child(n+17) {
-  display: none;
+.pairs-layout .student-seat {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid hsl(45, 90%, 60%, 0.3);
 }
 
-.circle-layout .student-seat,
-.circle-layout .drop-zone {
-  border-radius: 50%;
-  aspect-ratio: 1;
+/* Dragging states */
+.student-seat[data-dragging="true"] {
+  opacity: 0.7;
+  transform: rotate(5deg) scale(1.1);
+  z-index: 1000;
 }
 
-.stadium-layout .student-seat:nth-child(odd),
-.stadium-layout .drop-zone:nth-child(odd) {
-  transform: translateY(-5px);
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .classroom-container .relative {
+    transform: scale(0.8);
+    transform-origin: top left;
+  }
 }
 
-.stadium-layout .student-seat:nth-child(even),
-.stadium-layout .drop-zone:nth-child(even) {
-  transform: translateY(5px);
+@media (max-width: 768px) {
+  .classroom-container {
+    padding: 0.5rem;
+  }
+  
+  .classroom-container .relative {
+    transform: scale(0.6);
+    transform-origin: top left;
+  }
 }
 
-.drag-preview {
-  opacity: 0.5;
-  transform: rotate(5deg);
-}
-
-.drop-zone {
-  min-height: 80px;
-  border: 2px dashed hsl(210, 20%, 85%);
-  border-radius: var(--radius);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.drop-zone.drag-over {
-  border-color: hsl(210, 60%, 50%);
-  background-color: hsl(210, 60%, 98%);
+@media (max-width: 640px) {
+  .classroom-container .relative {
+    transform: scale(0.5);
+    transform-origin: top left;
+  }
 }
