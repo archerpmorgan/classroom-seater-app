@@ -38,9 +38,10 @@ DATABASE_URL=postgresql://username:password@host:port/database
 
 # Server configuration
 PORT=5000
-HOST=0.0.0.0
 NODE_ENV=production
 ```
+
+**Note**: The server automatically binds to `0.0.0.0` in production mode, which is required for cloud hosting platforms like Render.
 
 ## Deployment Options
 
@@ -59,7 +60,7 @@ NODE_ENV=production
 3. **Set environment variables** in your hosting platform:
    - `VITE_API_BASE_URL`: Your backend API URL
 
-#### Backend Deployment (Heroku, Railway, etc.)
+#### Backend Deployment (Heroku, Railway, Render, etc.)
 
 1. **Deploy the backend** to your hosting service
 
@@ -67,6 +68,19 @@ NODE_ENV=production
    - `DATABASE_URL`: Your PostgreSQL connection string
    - `PORT`: Port number (usually auto-set by hosting platform)
    - `NODE_ENV`: `production`
+
+#### Render-Specific Configuration
+
+For Render deployments:
+
+1. **Build Command**: `npm run build`
+2. **Start Command**: `npm start`
+3. **Environment Variables**:
+   - `NODE_ENV`: `production`
+   - `DATABASE_URL`: Your PostgreSQL connection string
+   - `PORT`: Auto-set by Render (don't override)
+
+The server automatically binds to `0.0.0.0` in production mode, which satisfies Render's requirements.
 
 ### Option 2: Monolithic Deployment
 
