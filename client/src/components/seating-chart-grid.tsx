@@ -51,17 +51,19 @@ export default function SeatingChartGrid({
 
     switch (layoutType) {
       case 'traditional-rows': {
-        // Dynamic rows based on student count
+        // Dynamic rows based on student count - avoid teacher desk area
         const seatsPerRow = 5;
         const rowsNeeded = Math.ceil(seatCount / seatsPerRow);
         let position = 0;
         
         for (let row = 0; row < rowsNeeded && position < seatCount; row++) {
           for (let col = 0; col < seatsPerRow && position < seatCount; col++) {
+            // Start further right to avoid teacher desk (20-100px wide)
+            // Start lower to avoid whiteboard area (top 60px)
             positions.push({
               position: position++,
-              x: col * 120 + 60,
-              y: row * 100 + 60
+              x: col * 120 + 120, // Start at x=120 instead of 60
+              y: row * 100 + 100  // Start at y=100 instead of 60
             });
           }
         }
@@ -69,13 +71,13 @@ export default function SeatingChartGrid({
       }
 
       case 'stadium': {
-        // V-shaped angled rows for better sightlines
+        // V-shaped angled rows for better sightlines - avoid overlaps
         let position = 0;
-        const rowSeats = [6, 7, 8, 7]; // Seats per row pattern
+        const rowSeats = [5, 6, 7, 6]; // Slightly fewer seats per row
         
         for (let row = 0; row < 4 && position < seatCount; row++) {
           const seatsInThisRow = Math.min(rowSeats[row], seatCount - position);
-          const startX = (6 - seatsInThisRow) * 60 + 60;
+          const startX = (6 - seatsInThisRow) * 60 + 120; // Start further right
           const angleOffset = row * 20;
           
           for (let col = 0; col < seatsInThisRow; col++) {
@@ -85,7 +87,7 @@ export default function SeatingChartGrid({
             positions.push({
               position: position++,
               x: startX + col * 120 + (row > 0 ? distanceFromCenter * angleOffset : 0),
-              y: row * 120 + 60,
+              y: row * 120 + 100, // Start lower to avoid whiteboard
               rotation: row > 0 ? (col < centerCol ? -5 : col > centerCol ? 5 : 0) : 0
             });
           }
@@ -94,19 +96,26 @@ export default function SeatingChartGrid({
       }
 
       case 'horseshoe': {
-        // U-shaped arrangement for discussions
-        const centerX = 350;
-        const centerY = 250;
+        // U-shaped arrangement for discussions - ensure proper spacing
+        const centerX = 400;
+        const centerY = 280;
         const radius = 180;
-        const angleStep = Math.PI / (seatCount - 1);
+        const angleStep = Math.PI / Math.max(seatCount - 1, 1);
         const startAngle = Math.PI; // Start from left side
         
         for (let i = 0; i < seatCount; i++) {
           const angle = startAngle - i * angleStep;
+          const x = centerX + Math.cos(angle) * radius;
+          const y = centerY + Math.sin(angle) * radius;
+          
+          // Ensure seats don't go into teacher desk area (top-left)
+          const adjustedX = Math.max(x, 140); // Keep away from teacher desk
+          const adjustedY = Math.max(y, 120); // Keep below whiteboard
+          
           positions.push({
             position: i,
-            x: centerX + Math.cos(angle) * radius,
-            y: centerY + Math.sin(angle) * radius,
+            x: adjustedX,
+            y: adjustedY,
             rotation: (angle - Math.PI/2) * 180 / Math.PI
           });
         }
@@ -114,37 +123,45 @@ export default function SeatingChartGrid({
       }
 
       case 'double-horseshoe': {
-        // Inner and outer horseshoe rings
-        const centerX = 350;
-        const centerY = 250;
+        // Inner and outer horseshoe rings - avoid overlaps
+        const centerX = 420;
+        const centerY = 300;
         let position = 0;
         
-        // Inner horseshoe (16 seats)
-        const innerRadius = 140;
-        const innerSeats = 16;
-        const innerAngleStep = Math.PI / (innerSeats - 1);
+        // Determine how many seats in each ring based on total
+        const innerSeats = Math.min(Math.ceil(seatCount / 2), 16);
+        const outerSeats = Math.min(seatCount - innerSeats, 16);
         
-        for (let i = 0; i < innerSeats; i++) {
+        // Inner horseshoe
+        const innerRadius = 140;
+        const innerAngleStep = Math.PI / Math.max(innerSeats - 1, 1);
+        
+        for (let i = 0; i < innerSeats && position < seatCount; i++) {
           const angle = Math.PI - i * innerAngleStep;
+          const x = centerX + Math.cos(angle) * innerRadius;
+          const y = centerY + Math.sin(angle) * innerRadius;
+          
           positions.push({
             position: position++,
-            x: centerX + Math.cos(angle) * innerRadius,
-            y: centerY + Math.sin(angle) * innerRadius,
+            x: Math.max(x, 140),
+            y: Math.max(y, 120),
             rotation: (angle - Math.PI/2) * 180 / Math.PI
           });
         }
         
-        // Outer horseshoe (16 seats)
-        const outerRadius = 220;
-        const outerSeats = 16;
-        const outerAngleStep = Math.PI / (outerSeats - 1);
+        // Outer horseshoe
+        const outerRadius = 240;
+        const outerAngleStep = Math.PI / Math.max(outerSeats - 1, 1);
         
-        for (let i = 0; i < outerSeats; i++) {
+        for (let i = 0; i < outerSeats && position < seatCount; i++) {
           const angle = Math.PI - i * outerAngleStep;
+          const x = centerX + Math.cos(angle) * outerRadius;
+          const y = centerY + Math.sin(angle) * outerRadius;
+          
           positions.push({
             position: position++,
-            x: centerX + Math.cos(angle) * outerRadius,
-            y: centerY + Math.sin(angle) * outerRadius,
+            x: Math.max(x, 140),
+            y: Math.max(y, 120),
             rotation: (angle - Math.PI/2) * 180 / Math.PI
           });
         }
@@ -152,18 +169,25 @@ export default function SeatingChartGrid({
       }
 
       case 'circle': {
-        // Complete circle for democratic discussions
-        const centerX = 350;
-        const centerY = 250;
+        // Complete circle for democratic discussions - avoid overlaps
+        const centerX = 400;
+        const centerY = 280;
         const radius = 160;
         const angleStep = (2 * Math.PI) / seatCount;
         
         for (let i = 0; i < seatCount; i++) {
           const angle = i * angleStep - Math.PI/2; // Start at top
+          const x = centerX + Math.cos(angle) * radius;
+          const y = centerY + Math.sin(angle) * radius;
+          
+          // Ensure seats don't overlap with teacher area
+          const adjustedX = Math.max(x, 140);
+          const adjustedY = Math.max(y, 120);
+          
           positions.push({
             position: i,
-            x: centerX + Math.cos(angle) * radius,
-            y: centerY + Math.sin(angle) * radius,
+            x: adjustedX,
+            y: adjustedY,
             rotation: angle * 180 / Math.PI + 90
           });
         }
@@ -199,7 +223,7 @@ export default function SeatingChartGrid({
       }
 
       case 'pairs': {
-        // Dynamic pairs based on student count
+        // Dynamic pairs based on student count - avoid overlaps
         let position = 0;
         const pairsNeeded = Math.ceil(seatCount / 2);
         const rowsNeeded = Math.ceil(pairsNeeded / 2);
@@ -209,8 +233,8 @@ export default function SeatingChartGrid({
             for (let seat = 0; seat < 2 && position < seatCount; seat++) {
               positions.push({
                 position: position++,
-                x: pairCol * 300 + seat * 80 + 150,
-                y: row * 100 + 60,
+                x: pairCol * 280 + seat * 80 + 160, // Adjust spacing and start position
+                y: row * 120 + 100, // Start lower to avoid teacher area
                 rotation: 0
               });
             }
