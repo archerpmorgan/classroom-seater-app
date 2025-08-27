@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, AlertCircle } from "lucide-react";
+import { FileUp, Download } from "lucide-react";
 
 export default function UploadArea() {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -96,6 +96,67 @@ export default function UploadArea() {
     fileInputRef.current?.click();
   };
 
+  const downloadCSVTemplate = () => {
+    const templateData = [
+      {
+        name: "Alex Chen",
+        primaryLanguage: "English",
+        skillLevel: "intermediate",
+        secondaryLanguages: "Spanish",
+        worksWellWith: "Maria Rodriguez",
+        avoidPairing: "John Smith",
+        notes: "Needs extra support with complex problems"
+      },
+      {
+        name: "Maria Rodriguez", 
+        primaryLanguage: "Spanish",
+        skillLevel: "beginner",
+        secondaryLanguages: "English",
+        worksWellWith: "Alex Chen",
+        avoidPairing: "",
+        notes: "Very engaged in group activities"
+      },
+      {
+        name: "John Smith",
+        primaryLanguage: "English", 
+        skillLevel: "advanced",
+        secondaryLanguages: "",
+        worksWellWith: "",
+        avoidPairing: "Alex Chen",
+        notes: "Can help other students"
+      }
+    ];
+
+    // Convert to CSV
+    const headers = Object.keys(templateData[0]);
+    const csvContent = [
+      headers.join(','),
+      ...templateData.map(row => 
+        headers.map(header => {
+          const value = row[header as keyof typeof row] || '';
+          // Wrap in quotes if contains comma
+          return value.includes(',') ? `"${value}"` : value;
+        }).join(',')
+      )
+    ].join('\n');
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'student_data_template.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: "Template Downloaded",
+      description: "CSV template saved to your downloads folder",
+    });
+  };
+
   return (
     <div>
       <div 
@@ -139,16 +200,18 @@ export default function UploadArea() {
         )}
       </div>
       
-      {/* CSV Format Help */}
-      <div className="mt-4 p-3 bg-muted rounded-md">
-        <div className="flex items-start space-x-2">
-          <AlertCircle className="w-4 h-4 text-muted-foreground mt-0.5" />
-          <div className="text-xs text-muted-foreground">
-            <p className="font-medium mb-1">Required CSV columns:</p>
-            <p>name, primaryLanguage, skillLevel (beginner/intermediate/advanced)</p>
-            <p className="mt-1">Optional: secondaryLanguages, worksWellWith, avoidPairing, notes</p>
-          </div>
-        </div>
+      {/* CSV Template Download */}
+      <div className="mt-4">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="w-full"
+          onClick={downloadCSVTemplate}
+          data-testid="download-template-button"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Download CSV Template
+        </Button>
       </div>
     </div>
   );
