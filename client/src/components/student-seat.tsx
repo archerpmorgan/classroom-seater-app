@@ -27,7 +27,7 @@ export default function StudentSeat({
   };
 
   const getLanguagesDisplay = () => {
-    const languages = [student.primaryLanguage, ...student.secondaryLanguages];
+    const languages = [student.primaryLanguage, ...(student.secondaryLanguages || [])];
     return languages.slice(0, 2).join('/');
   };
 
@@ -67,14 +67,14 @@ export default function StudentSeat({
       </div>
       
       {/* Show compatibility indicators if present */}
-      {(student.worksWellWith.length > 0 || student.avoidPairing.length > 0) && (
+      {((student.worksWellWith?.length || 0) > 0 || (student.avoidPairing?.length || 0) > 0) && (
         <div className="flex justify-center mt-1 space-x-1">
-          {student.worksWellWith.length > 0 && (
+          {(student.worksWellWith?.length || 0) > 0 && (
             <span className="text-xs text-green-600" title="Has preferred partners">
               ✓
             </span>
           )}
-          {student.avoidPairing.length > 0 && (
+          {(student.avoidPairing?.length || 0) > 0 && (
             <span className="text-xs text-red-600" title="Has constraints">
               ⚠
             </span>

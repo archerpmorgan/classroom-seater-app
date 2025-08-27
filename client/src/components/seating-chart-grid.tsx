@@ -3,7 +3,7 @@ import StudentSeat from "./student-seat";
 import type { Student } from "@shared/schema";
 
 interface SeatingChartGridProps {
-  layout: 'rows' | 'groups' | 'u-shape';
+  layout: 'traditional-rows' | 'stadium' | 'horseshoe' | 'double-horseshoe' | 'circle' | 'groups' | 'pairs';
   students: Student[];
   currentChart: {position: number, studentId: string | null}[];
   onChartChange: (chart: {position: number, studentId: string | null}[]) => void;
@@ -18,7 +18,19 @@ export default function SeatingChartGrid({
   const [draggedStudent, setDraggedStudent] = useState<Student | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<number | null>(null);
 
-  const totalSeats = layout === 'rows' ? 24 : layout === 'groups' ? 16 : 32;
+  const getSeatCount = (layoutType: string) => {
+    switch (layoutType) {
+      case 'traditional-rows': return 30;
+      case 'stadium': return 28;
+      case 'horseshoe': return 20;
+      case 'double-horseshoe': return 32;
+      case 'circle': return 16;
+      case 'groups': return 24;
+      case 'pairs': return 20;
+      default: return 24;
+    }
+  };
+  const totalSeats = getSeatCount(layout);
   
   // Initialize seats if empty
   const seats = currentChart.length > 0 
@@ -76,10 +88,14 @@ export default function SeatingChartGrid({
 
   const getLayoutClass = () => {
     switch (layout) {
-      case 'rows': return 'rows-layout';
+      case 'traditional-rows': return 'traditional-rows-layout';
+      case 'stadium': return 'stadium-layout';
+      case 'horseshoe': return 'horseshoe-layout';
+      case 'double-horseshoe': return 'double-horseshoe-layout';
+      case 'circle': return 'circle-layout';
       case 'groups': return 'groups-layout';
-      case 'u-shape': return 'u-shape-layout';
-      default: return 'rows-layout';
+      case 'pairs': return 'pairs-layout';
+      default: return 'traditional-rows-layout';
     }
   };
 

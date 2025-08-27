@@ -85,16 +85,68 @@
   min-height: 400px;
 }
 
-.rows-layout {
+/* Traditional classroom layouts */
+.traditional-rows-layout {
   grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+}
+
+.stadium-layout {
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  transform: perspective(800px) rotateX(5deg);
+}
+
+.horseshoe-layout {
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  border-radius: 50% 50% 0 0;
+}
+
+.double-horseshoe-layout {
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+}
+
+.circle-layout {
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  border-radius: 50%;
+  aspect-ratio: 1;
 }
 
 .groups-layout {
   grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 20px;
 }
 
-.u-shape-layout {
-  grid-template-columns: repeat(8, 1fr);
+.pairs-layout {
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 8px;
+}
+
+/* Special positioning for complex layouts */
+.horseshoe-layout .student-seat:nth-child(n+17),
+.horseshoe-layout .drop-zone:nth-child(n+17) {
+  display: none;
+}
+
+.circle-layout .student-seat,
+.circle-layout .drop-zone {
+  border-radius: 50%;
+  aspect-ratio: 1;
+}
+
+.stadium-layout .student-seat:nth-child(odd),
+.stadium-layout .drop-zone:nth-child(odd) {
+  transform: translateY(-5px);
+}
+
+.stadium-layout .student-seat:nth-child(even),
+.stadium-layout .drop-zone:nth-child(even) {
+  transform: translateY(5px);
 }
 
 .drag-preview {

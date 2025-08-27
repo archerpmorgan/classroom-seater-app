@@ -7,18 +7,18 @@ export const students = pgTable("students", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   primaryLanguage: text("primary_language").notNull(),
-  secondaryLanguages: jsonb("secondary_languages").$type<string[]>().default([]),
+  secondaryLanguages: jsonb("secondary_languages").$type<string[]>().notNull().default([]),
   skillLevel: text("skill_level").notNull(), // 'beginner', 'intermediate', 'advanced'
-  worksWellWith: jsonb("works_well_with").$type<string[]>().default([]),
-  avoidPairing: jsonb("avoid_pairing").$type<string[]>().default([]),
-  notes: text("notes").default(""),
+  worksWellWith: jsonb("works_well_with").$type<string[]>().notNull().default([]),
+  avoidPairing: jsonb("avoid_pairing").$type<string[]>().notNull().default([]),
+  notes: text("notes").notNull().default(""),
 });
 
 export const seatingCharts = pgTable("seating_charts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
-  layout: text("layout").notNull(), // 'rows', 'groups', 'u-shape'
-  strategy: text("strategy").notNull(), // 'mixed', 'skill-based', 'language-support', etc.
+  layout: text("layout").notNull(), // 'traditional-rows', 'stadium', 'horseshoe', 'double-horseshoe', 'circle', 'groups', 'pairs'
+  strategy: text("strategy").notNull(), // 'mixed-ability', 'skill-clustering', 'language-support', 'collaborative-pairs', 'attention-zone', 'behavior-management', 'random'
   seats: jsonb("seats").$type<{position: number, studentId: string | null}[]>().notNull(),
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
 });

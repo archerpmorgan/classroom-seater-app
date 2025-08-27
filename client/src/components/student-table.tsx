@@ -98,10 +98,10 @@ export default function StudentTable({ students, isLoading }: StudentTableProps)
     form.reset({
       name: student.name,
       primaryLanguage: student.primaryLanguage,
-      secondaryLanguagesText: student.secondaryLanguages.join(', '),
+      secondaryLanguagesText: (student.secondaryLanguages || []).join(', '),
       skillLevel: student.skillLevel as "beginner" | "intermediate" | "advanced",
-      worksWellWithText: student.worksWellWith.join(', '),
-      avoidPairingText: student.avoidPairing.join(', '),
+      worksWellWithText: (student.worksWellWith || []).join(', '),
+      avoidPairingText: (student.avoidPairing || []).join(', '),
       notes: student.notes || "",
     });
     setIsDialogOpen(true);
@@ -138,13 +138,13 @@ export default function StudentTable({ students, isLoading }: StudentTableProps)
   };
 
   const getSkillLevelBadge = (level: string) => {
-    const variants = {
+    const variants: Record<string, "default" | "secondary" | "outline"> = {
       beginner: "default",
       intermediate: "secondary",
       advanced: "outline",
     };
     return (
-      <Badge variant={variants[level as keyof typeof variants] || "default"}>
+      <Badge variant={variants[level] || "default"}>
         {level}
       </Badge>
     );
@@ -283,7 +283,7 @@ export default function StudentTable({ students, isLoading }: StudentTableProps)
                       <FormItem>
                         <FormLabel>Notes</FormLabel>
                         <FormControl>
-                          <Textarea {...field} data-testid="textarea-notes" />
+                          <Textarea {...field} value={field.value || ""} data-testid="textarea-notes" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -330,16 +330,16 @@ export default function StudentTable({ students, isLoading }: StudentTableProps)
                   <TableRow key={student.id} data-testid={`row-student-${student.id}`}>
                     <TableCell className="font-medium">{student.name}</TableCell>
                     <TableCell className="text-muted-foreground">
-                      {[student.primaryLanguage, ...student.secondaryLanguages].join(', ')}
+                      {[student.primaryLanguage, ...(student.secondaryLanguages || [])].join(', ')}
                     </TableCell>
                     <TableCell>
                       {getSkillLevelBadge(student.skillLevel)}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {student.worksWellWith.join(', ') || '-'}
+                      {(student.worksWellWith || []).join(', ') || '-'}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {student.avoidPairing.join(', ') || '-'}
+                      {(student.avoidPairing || []).join(', ') || '-'}
                     </TableCell>
                     <TableCell>
                       <Button 

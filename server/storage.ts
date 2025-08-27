@@ -39,7 +39,14 @@ export class MemStorage implements IStorage {
 
   async createStudent(insertStudent: InsertStudent): Promise<Student> {
     const id = randomUUID();
-    const student: Student = { ...insertStudent, id };
+    const student: Student = { 
+      ...insertStudent, 
+      id,
+      secondaryLanguages: insertStudent.secondaryLanguages || [],
+      worksWellWith: insertStudent.worksWellWith || [],
+      avoidPairing: insertStudent.avoidPairing || [],
+      notes: insertStudent.notes || ""
+    };
     this.students.set(id, student);
     return student;
   }
@@ -48,7 +55,15 @@ export class MemStorage implements IStorage {
     const existing = this.students.get(id);
     if (!existing) return undefined;
     
-    const updated: Student = { ...existing, ...updateData };
+    const updated: Student = { 
+      ...existing, 
+      ...updateData,
+      id: existing.id,
+      secondaryLanguages: updateData.secondaryLanguages !== undefined ? updateData.secondaryLanguages : existing.secondaryLanguages,
+      worksWellWith: updateData.worksWellWith !== undefined ? updateData.worksWellWith : existing.worksWellWith,
+      avoidPairing: updateData.avoidPairing !== undefined ? updateData.avoidPairing : existing.avoidPairing,
+      notes: updateData.notes !== undefined ? updateData.notes : existing.notes
+    };
     this.students.set(id, updated);
     return updated;
   }
@@ -84,6 +99,7 @@ export class MemStorage implements IStorage {
     const chart: SeatingChart = { 
       ...insertChart, 
       id,
+      seats: insertChart.seats || [],
       createdAt: new Date().toISOString()
     };
     this.seatingCharts.set(id, chart);
@@ -94,7 +110,13 @@ export class MemStorage implements IStorage {
     const existing = this.seatingCharts.get(id);
     if (!existing) return undefined;
     
-    const updated: SeatingChart = { ...existing, ...updateData };
+    const updated: SeatingChart = { 
+      ...existing, 
+      ...updateData,
+      id: existing.id,
+      createdAt: existing.createdAt,
+      seats: updateData.seats !== undefined ? updateData.seats : existing.seats
+    };
     this.seatingCharts.set(id, updated);
     return updated;
   }
