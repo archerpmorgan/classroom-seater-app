@@ -62,15 +62,23 @@ function generateMixedAbilityArrangement(students: Student[]): Student[] {
   const intermediate = students.filter(s => s.skillLevel === 'intermediate');
   const advanced = students.filter(s => s.skillLevel === 'advanced');
   
-  // Mix students by alternating skill levels
+  // Mix students by alternating skill levels while respecting avoid constraints
   const mixed: Student[] = [];
   const maxLength = Math.max(beginners.length, intermediate.length, advanced.length);
   
   for (let i = 0; i < maxLength; i++) {
-    if (advanced[i]) mixed.push(advanced[i]);
-    if (beginners[i]) mixed.push(beginners[i]);
-    if (intermediate[i]) mixed.push(intermediate[i]);
+    if (advanced[i] && canPlaceStudent(advanced[i], mixed)) mixed.push(advanced[i]);
+    if (beginners[i] && canPlaceStudent(beginners[i], mixed)) mixed.push(beginners[i]);
+    if (intermediate[i] && canPlaceStudent(intermediate[i], mixed)) mixed.push(intermediate[i]);
   }
+  
+  // Add any remaining students who weren't placed due to constraints
+  const allGroups = [...beginners, ...intermediate, ...advanced];
+  allGroups.forEach(student => {
+    if (!mixed.includes(student)) {
+      mixed.push(student);
+    }
+  });
   
   return mixed;
 }
@@ -100,14 +108,14 @@ function generateLanguageSupportArrangement(students: Student[]): Student[] {
     });
   });
   
-  // Arrange students to be near others who share their languages
+  // Arrange students to be near others who share their languages, avoiding conflicts
   const arranged: Student[] = [];
   const used = new Set<string>();
   
   for (const [language, studentsInGroup] of Array.from(languageGroups.entries())) {
     if (studentsInGroup.length > 1) {
       studentsInGroup.forEach((student: Student) => {
-        if (!used.has(student.id)) {
+        if (!used.has(student.id) && canPlaceStudent(student, arranged.slice(-2))) {
           arranged.push(student);
           used.add(student.id);
         }
@@ -115,10 +123,16 @@ function generateLanguageSupportArrangement(students: Student[]): Student[] {
     }
   }
   
-  // Add remaining students
+  // Add remaining students, checking for avoid conflicts
   students.forEach(student => {
     if (!used.has(student.id)) {
-      arranged.push(student);
+      if (canPlaceStudent(student, arranged.slice(-2))) {
+        arranged.push(student);
+      } else {
+        // Insert with spacing to avoid conflicts
+        const safeIndex = Math.max(0, arranged.length - 2);
+        arranged.splice(safeIndex, 0, student);
+      }
     }
   });
   
@@ -137,12 +151,12 @@ function generateCollaborativeArrangement(students: Student[]): Student[] {
       arranged.push(student);
       used.add(student.id);
       
-      // Add their preferred partners nearby
+      // Add their preferred partners nearby, but check avoid constraints
       (student.worksWellWith || []).forEach(partnerName => {
         const partner = students.find(s => 
           s.name.toLowerCase() === partnerName.toLowerCase() && !used.has(s.id)
         );
-        if (partner) {
+        if (partner && !hasAvoidConflict(student, partner)) {
           arranged.push(partner);
           used.add(partner.id);
         }
@@ -150,10 +164,15 @@ function generateCollaborativeArrangement(students: Student[]): Student[] {
     }
   });
   
-  // Add remaining students
+  // Add remaining students, checking for avoid conflicts with recently placed students
   students.forEach(student => {
     if (!used.has(student.id)) {
-      arranged.push(student);
+      if (canPlaceStudent(student, arranged.slice(-2))) { // Check last 2 students for adjacency
+        arranged.push(student);
+      } else {
+        // Insert with some spacing
+        arranged.splice(-1, 0, student);
+      }
     }
   });
   
@@ -167,6 +186,21 @@ function generateRandomArrangement(students: Student[]): Student[] {
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
   return shuffled;
+}
+
+// Helper function to check if two students should avoid being paired
+function hasAvoidConflict(student1: Student, student2: Student): boolean {
+  const student1Avoids = (student1.avoidPairing || []).map(name => name.toLowerCase());
+  const student2Avoids = (student2.avoidPairing || []).map(name => name.toLowerCase());
+  
+  return student1Avoids.includes(student2.name.toLowerCase()) ||
+         student2Avoids.includes(student1.name.toLowerCase());
+}
+
+// Helper function to check if a student can be placed near recently added students
+function canPlaceStudent(student: Student, recentlyPlaced: Student[]): boolean {
+  // Check if this student conflicts with any of the recently placed students
+  return !recentlyPlaced.some(placedStudent => hasAvoidConflict(student, placedStudent));
 }
 
 function generateAttentionZoneArrangement(students: Student[], totalSeats: number): Student[] {
@@ -198,15 +232,30 @@ function generateBehaviorManagementArrangement(students: Student[], totalSeats: 
   // Place constrained students first, ensuring separation
   studentsWithConstraints.forEach(student => {
     if (!used.has(student.id)) {
-      arranged.push(student);
-      used.add(student.id);
-      
-      // Add buffer students (those without constraints) to separate problem pairs
-      const availableBuffers = studentsWithoutConstraints.filter(s => !used.has(s.id));
-      if (availableBuffers.length > 0) {
-        arranged.push(availableBuffers[0]);
-        used.add(availableBuffers[0].id);
+      // Check if this student can be safely placed
+      if (canPlaceStudent(student, arranged.slice(-3))) { // Check last 3 for more spacing
+        arranged.push(student);
+        used.add(student.id);
+        
+        // Add buffer students (those without constraints) to separate problem pairs
+        const availableBuffers = studentsWithoutConstraints.filter(s => 
+          !used.has(s.id) && canPlaceStudent(s, [student])
+        );
+        if (availableBuffers.length > 0) {
+          arranged.push(availableBuffers[0]);
+          used.add(availableBuffers[0].id);
+        }
       }
+    }
+  });
+  
+  // Add remaining constrained students who couldn't be placed initially
+  studentsWithConstraints.forEach(student => {
+    if (!used.has(student.id)) {
+      // Place with maximum spacing
+      const safeIndex = Math.max(0, arranged.length - 3);
+      arranged.splice(safeIndex, 0, student);
+      used.add(student.id);
     }
   });
   
