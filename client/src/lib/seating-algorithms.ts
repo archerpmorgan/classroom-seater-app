@@ -108,18 +108,16 @@ function generateSkillClusteringArrangement(students: Student[]): Student[] {
 }
 
 function generateLanguageSupportArrangement(students: Student[]): Student[] {
-  // Group students who share languages
+  // Group students who share primary languages
   const languageGroups = new Map<string, Student[]>();
   
   students.forEach(student => {
-    const allLanguages = [student.primaryLanguage, ...(student.secondaryLanguages || [])];
+    const language = student.primaryLanguage;
     
-    allLanguages.forEach(language => {
-      if (!languageGroups.has(language)) {
-        languageGroups.set(language, []);
-      }
-      languageGroups.get(language)!.push(student);
-    });
+    if (!languageGroups.has(language)) {
+      languageGroups.set(language, []);
+    }
+    languageGroups.get(language)!.push(student);
   });
   
   // Arrange students to be near others who share their languages, avoiding conflicts

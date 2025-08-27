@@ -7,6 +7,7 @@ interface SeatingChartGridProps {
   students: Student[];
   currentChart: {position: number, studentId: string | null, customX?: number, customY?: number}[];
   onChartChange: (chart: {position: number, studentId: string | null, customX?: number, customY?: number}[]) => void;
+  onChartChangeComplete?: (chart: {position: number, studentId: string | null, customX?: number, customY?: number}[]) => void;
   privacyMode?: boolean;
 }
 
@@ -22,6 +23,7 @@ export default function SeatingChartGrid({
   students, 
   currentChart, 
   onChartChange,
+  onChartChangeComplete,
   privacyMode
 }: SeatingChartGridProps) {
   const [draggedStudent, setDraggedStudent] = useState<Student | null>(null);
@@ -580,6 +582,11 @@ export default function SeatingChartGrid({
   };
 
   const handleContainerMouseUp = () => {
+    // If we were dragging a desk or multiple desks, notify that the operation is complete
+    if ((isDraggingDesk || isDraggingMultiple) && onChartChangeComplete) {
+      onChartChangeComplete([...seats]);
+    }
+    
     setIsDraggingTeacherDesk(false);
     setIsDraggingWhiteboard(false);
     setIsDraggingDoor(false);

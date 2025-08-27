@@ -7,7 +7,6 @@ export const students = pgTable("students", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   primaryLanguage: text("primary_language").notNull(),
-  secondaryLanguages: jsonb("secondary_languages").$type<string[]>().notNull().default([]),
   skillLevel: text("skill_level").notNull(), // 'beginner', 'intermediate', 'advanced'
   worksWellWith: jsonb("works_well_with").$type<string[]>().notNull().default([]),
   avoidPairing: jsonb("avoid_pairing").$type<string[]>().notNull().default([]),
@@ -41,9 +40,6 @@ export type InsertSeatingChart = z.infer<typeof insertSeatingChartSchema>;
 export const csvStudentSchema = z.object({
   name: z.string().min(1, "Name is required"),
   primaryLanguage: z.string().min(1, "Primary language is required"),
-  secondaryLanguages: z.string().optional().transform(val => 
-    val ? val.split(',').map(s => s.trim()).filter(Boolean) : []
-  ),
   skillLevel: z.enum(['beginner', 'intermediate', 'advanced']),
   worksWellWith: z.string().optional().transform(val => 
     val ? val.split(',').map(s => s.trim()).filter(Boolean) : []

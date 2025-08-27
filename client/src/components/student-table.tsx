@@ -24,7 +24,6 @@ interface StudentTableProps {
 }
 
 const formSchema = insertStudentSchema.extend({
-  secondaryLanguagesText: z.string().optional(),
   worksWellWithText: z.string().optional(),
   avoidPairingText: z.string().optional(),
 });
@@ -42,7 +41,6 @@ export default function StudentTable({ students, isLoading }: StudentTableProps)
     defaultValues: {
       name: "",
       primaryLanguage: "",
-      secondaryLanguagesText: "",
       skillLevel: "beginner",
       worksWellWithText: "",
       avoidPairingText: "",
@@ -98,7 +96,6 @@ export default function StudentTable({ students, isLoading }: StudentTableProps)
     form.reset({
       name: student.name,
       primaryLanguage: student.primaryLanguage,
-      secondaryLanguagesText: (student.secondaryLanguages || []).join(', '),
       skillLevel: student.skillLevel as "beginner" | "intermediate" | "advanced",
       worksWellWithText: (student.worksWellWith || []).join(', '),
       avoidPairingText: (student.avoidPairing || []).join(', '),
@@ -117,9 +114,6 @@ export default function StudentTable({ students, isLoading }: StudentTableProps)
     const studentData: InsertStudent = {
       name: data.name,
       primaryLanguage: data.primaryLanguage,
-      secondaryLanguages: data.secondaryLanguagesText 
-        ? data.secondaryLanguagesText.split(',').map(s => s.trim()).filter(Boolean)
-        : [],
       skillLevel: data.skillLevel,
       worksWellWith: data.worksWellWithText
         ? data.worksWellWithText.split(',').map(s => s.trim()).filter(Boolean)
@@ -211,19 +205,7 @@ export default function StudentTable({ students, isLoading }: StudentTableProps)
                     )}
                   />
                   
-                  <FormField
-                    control={form.control}
-                    name="secondaryLanguagesText"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Secondary Languages (comma-separated)</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Spanish, French" data-testid="input-secondary-languages" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+
                   
                   <FormField
                     control={form.control}
@@ -318,7 +300,7 @@ export default function StudentTable({ students, isLoading }: StudentTableProps)
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Languages</TableHead>
+                  <TableHead>Primary Language</TableHead>
                   <TableHead>Skill Level</TableHead>
                   <TableHead>Works Well With</TableHead>
                   <TableHead>Avoid Pairing</TableHead>
@@ -330,7 +312,7 @@ export default function StudentTable({ students, isLoading }: StudentTableProps)
                   <TableRow key={student.id} data-testid={`row-student-${student.id}`}>
                     <TableCell className="font-medium">{student.name}</TableCell>
                     <TableCell className="text-muted-foreground">
-                      {[student.primaryLanguage, ...(student.secondaryLanguages || [])].join(', ')}
+                      {student.primaryLanguage}
                     </TableCell>
                     <TableCell>
                       {getSkillLevelBadge(student.skillLevel)}

@@ -276,7 +276,6 @@ export default function SeatingChart() {
       const headers = [
         'Name',
         'Primary Language',
-        'Secondary Languages',
         'Skill Level',
         'Works Well With',
         'Avoid Pairing',
@@ -287,7 +286,6 @@ export default function SeatingChart() {
       const csvRows = students.map(student => [
         student.name,
         student.primaryLanguage,
-        (student.secondaryLanguages || []).join(', '),
         student.skillLevel,
         (student.worksWellWith || []).join(', '),
         (student.avoidPairing || []).join(', '),
@@ -422,7 +420,7 @@ export default function SeatingChart() {
     switch (strategy) {
       case 'mixed-ability': return 'Research shows heterogeneous grouping benefits both high and low achievers through peer tutoring effects.';
       case 'skill-clustering': return 'Allows for differentiated instruction and reduces achievement gaps within groups.';
-      case 'language-support': return 'Bilingual students show increased engagement when paired with same-language peers.';
+      case 'language-support': return 'Students show increased engagement when paired with peers who share their primary language.';
       case 'collaborative-pairs': return 'Students who choose compatible partners show 23% higher task completion rates.';
       case 'attention-zone': return 'Front-center "action zone" receives 40% more teacher interactions, improving engagement.';
       case 'behavior-management': return 'Strategic separation reduces disruptive behavior by 60-75% compared to student choice.';
@@ -435,7 +433,7 @@ export default function SeatingChart() {
     switch (strategy) {
       case 'mixed-ability': return 'Strategic pairing of different skill levels to promote peer learning and support. Research shows this enhances understanding for both advanced and struggling students.';
       case 'skill-clustering': return 'Groups students with similar skill levels together for targeted, differentiated instruction. Allows teachers to provide level-appropriate challenges.';
-      case 'language-support': return 'Places students who share languages together to provide mutual support and reduce language barriers in mathematics learning.';
+      case 'language-support': return 'Places students who share the same primary language together to provide mutual support and reduce language barriers in learning.';
       case 'collaborative-pairs': return 'Positions students who work well together in close proximity based on their stated preferences and past collaboration success.';
       case 'attention-zone': return 'Places students who need more support in the front-center "action zone" where they receive maximum teacher attention and engagement.';
       case 'behavior-management': return 'Strategic placement to minimize disruptions by separating students with avoidance constraints and positioning high-need students optimally.';
@@ -837,8 +835,11 @@ export default function SeatingChart() {
                   currentChart={currentChart}
                   onChartChange={(newChart) => {
                     setCurrentChart(newChart);
-                    // Save to history when chart changes (desk movements, etc.)
-                    // but not when restoring from history
+                    // Don't save to history during drag operations
+                    // Only save when operations are complete
+                  }}
+                  onChartChangeComplete={(newChart) => {
+                    // This is called when a drag operation is complete
                     if (!isRestoringFromHistory) {
                       saveToHistory(newChart);
                     }
