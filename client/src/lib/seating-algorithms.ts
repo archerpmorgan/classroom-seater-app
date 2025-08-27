@@ -8,7 +8,8 @@ export interface SeatAssignment {
 export function generateSeatingChart(
   students: Student[],
   strategy: string,
-  totalSeats: number
+  totalSeats: number,
+  layout?: string
 ): SeatAssignment[] {
   const seats: SeatAssignment[] = Array.from({ length: totalSeats }, (_, i) => ({
     position: i,
@@ -21,29 +22,38 @@ export function generateSeatingChart(
 
   let arrangement: Student[] = [];
 
-  switch (strategy) {
-    case 'mixed-ability':
-      arrangement = generateMixedAbilityArrangement(students);
-      break;
-    case 'skill-clustering':
-      arrangement = generateSkillClusteringArrangement(students);
-      break;
-    case 'language-support':
-      arrangement = generateLanguageSupportArrangement(students);
-      break;
-    case 'collaborative-pairs':
-      arrangement = generateCollaborativeArrangement(students);
-      break;
-    case 'attention-zone':
-      arrangement = generateAttentionZoneArrangement(students, totalSeats);
-      break;
-    case 'behavior-management':
-      arrangement = generateBehaviorManagementArrangement(students, totalSeats);
-      break;
-    case 'random':
-    default:
-      arrangement = generateRandomArrangement(students);
-      break;
+  // Check if the layout supports grouping strategies
+  const supportsGrouping = layout === 'groups' || layout === 'pairs';
+  
+  // For non-grouping layouts, use random assignment regardless of strategy
+  if (!supportsGrouping) {
+    arrangement = generateRandomArrangement(students);
+  } else {
+    // Use the selected strategy for grouping layouts
+    switch (strategy) {
+      case 'mixed-ability':
+        arrangement = generateMixedAbilityArrangement(students);
+        break;
+      case 'skill-clustering':
+        arrangement = generateSkillClusteringArrangement(students);
+        break;
+      case 'language-support':
+        arrangement = generateLanguageSupportArrangement(students);
+        break;
+      case 'collaborative-pairs':
+        arrangement = generateCollaborativeArrangement(students);
+        break;
+      case 'attention-zone':
+        arrangement = generateAttentionZoneArrangement(students, totalSeats);
+        break;
+      case 'behavior-management':
+        arrangement = generateBehaviorManagementArrangement(students, totalSeats);
+        break;
+      case 'random':
+      default:
+        arrangement = generateRandomArrangement(students);
+        break;
+    }
   }
 
   // Assign students to seats

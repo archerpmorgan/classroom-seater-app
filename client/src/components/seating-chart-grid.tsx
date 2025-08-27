@@ -7,6 +7,7 @@ interface SeatingChartGridProps {
   students: Student[];
   currentChart: {position: number, studentId: string | null}[];
   onChartChange: (chart: {position: number, studentId: string | null}[]) => void;
+  privacyMode?: boolean;
 }
 
 interface SeatPosition {
@@ -20,7 +21,8 @@ export default function SeatingChartGrid({
   layout, 
   students, 
   currentChart, 
-  onChartChange 
+  onChartChange,
+  privacyMode
 }: SeatingChartGridProps) {
   const [draggedStudent, setDraggedStudent] = useState<Student | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<number | null>(null);
@@ -46,24 +48,49 @@ export default function SeatingChartGrid({
     return Math.min(studentCount, maxForLayout);
   };
 
+  // Helper function to check if a position overlaps with teacher desk
+  const isOverlappingTeacherDesk = (x: number, y: number): boolean => {
+    // Teacher desk is at (20, 20) with size 80x60
+    const deskLeft = 20;
+    const deskTop = 20;
+    const deskRight = deskLeft + 80;
+    const deskBottom = deskTop + 60;
+    
+    // Student seat is approximately 64x64 (w-16 h-16)
+    const seatSize = 64;
+    const seatLeft = x;
+    const seatTop = y;
+    const seatRight = x + seatSize;
+    const seatBottom = y + seatSize;
+    
+    // Check for overlap
+    return !(seatLeft >= deskRight || seatRight <= deskLeft || seatTop >= deskBottom || seatBottom <= deskTop);
+  };
+
   const generateLayoutPositions = (layoutType: string, seatCount: number): SeatPosition[] => {
     const positions: SeatPosition[] = [];
 
     switch (layoutType) {
       case 'traditional-rows': {
-        // Dynamic rows based on student count - avoid teacher desk area
+        // Dynamic rows based on student count - allow seats in front of teacher desk
         const seatsPerRow = 5;
         const rowsNeeded = Math.ceil(seatCount / seatsPerRow);
         let position = 0;
         
         for (let row = 0; row < rowsNeeded && position < seatCount; row++) {
           for (let col = 0; col < seatsPerRow && position < seatCount; col++) {
-            // Start further right to avoid teacher desk (20-100px wide)
-            // Start lower to avoid whiteboard area (top 60px)
+            let x = col * 120 + 60; // Start at x=60 (allows seats in front of desk)
+            let y = row * 100 + 100; // Start at y=100 to avoid whiteboard
+            
+            // If this position overlaps with teacher desk, adjust it
+            if (isOverlappingTeacherDesk(x, y)) {
+              x = 120; // Move to the right of the desk
+            }
+            
             positions.push({
               position: position++,
-              x: col * 120 + 120, // Start at x=120 instead of 60
-              y: row * 100 + 100  // Start at y=100 instead of 60
+              x: x,
+              y: y
             });
           }
         }
@@ -71,23 +98,31 @@ export default function SeatingChartGrid({
       }
 
       case 'stadium': {
-        // V-shaped angled rows for better sightlines - avoid overlaps
+        // V-shaped angled rows for better sightlines - allow seats in front of teacher desk
         let position = 0;
         const rowSeats = [5, 6, 7, 6]; // Slightly fewer seats per row
         
         for (let row = 0; row < 4 && position < seatCount; row++) {
           const seatsInThisRow = Math.min(rowSeats[row], seatCount - position);
-          const startX = (6 - seatsInThisRow) * 60 + 120; // Start further right
+          let startX = (6 - seatsInThisRow) * 60 + 60; // Start at x=60 (allows seats in front of desk)
           const angleOffset = row * 20;
           
           for (let col = 0; col < seatsInThisRow; col++) {
             const centerCol = (seatsInThisRow - 1) / 2;
             const distanceFromCenter = Math.abs(col - centerCol);
             
+            let x = startX + col * 120 + (row > 0 ? distanceFromCenter * angleOffset : 0);
+            let y = row * 120 + 100; // Start lower to avoid whiteboard
+            
+            // If this position overlaps with teacher desk, adjust it
+            if (isOverlappingTeacherDesk(x, y)) {
+              x = 120; // Move to the right of the desk
+            }
+            
             positions.push({
               position: position++,
-              x: startX + col * 120 + (row > 0 ? distanceFromCenter * angleOffset : 0),
-              y: row * 120 + 100, // Start lower to avoid whiteboard
+              x: x,
+              y: y,
               rotation: row > 0 ? (col < centerCol ? -5 : col > centerCol ? 5 : 0) : 0
             });
           }
@@ -96,7 +131,7 @@ export default function SeatingChartGrid({
       }
 
       case 'horseshoe': {
-        // U-shaped arrangement for discussions - ensure proper spacing
+        // U-shaped arrangement for discussions - use overlap detection
         const centerX = 400;
         const centerY = 280;
         const radius = 180;
@@ -105,17 +140,21 @@ export default function SeatingChartGrid({
         
         for (let i = 0; i < seatCount; i++) {
           const angle = startAngle - i * angleStep;
-          const x = centerX + Math.cos(angle) * radius;
-          const y = centerY + Math.sin(angle) * radius;
+          let x = centerX + Math.cos(angle) * radius;
+          let y = centerY + Math.sin(angle) * radius;
           
-          // Ensure seats don't go into teacher desk area (top-left)
-          const adjustedX = Math.max(x, 140); // Keep away from teacher desk
-          const adjustedY = Math.max(y, 120); // Keep below whiteboard
+          // Ensure seats don't go below whiteboard
+          y = Math.max(y, 120);
+          
+          // If this position overlaps with teacher desk, adjust it
+          if (isOverlappingTeacherDesk(x, y)) {
+            x = 120; // Move to the right of the desk
+          }
           
           positions.push({
             position: i,
-            x: adjustedX,
-            y: adjustedY,
+            x: x,
+            y: y,
             rotation: (angle - Math.PI/2) * 180 / Math.PI
           });
         }
@@ -138,13 +177,21 @@ export default function SeatingChartGrid({
         
         for (let i = 0; i < innerSeats && position < seatCount; i++) {
           const angle = Math.PI - i * innerAngleStep;
-          const x = centerX + Math.cos(angle) * innerRadius;
-          const y = centerY + Math.sin(angle) * innerRadius;
+          let x = centerX + Math.cos(angle) * innerRadius;
+          let y = centerY + Math.sin(angle) * innerRadius;
+          
+          // Ensure seats don't go below whiteboard
+          y = Math.max(y, 120);
+          
+          // If this position overlaps with teacher desk, adjust it
+          if (isOverlappingTeacherDesk(x, y)) {
+            x = 120; // Move to the right of the desk
+          }
           
           positions.push({
             position: position++,
-            x: Math.max(x, 140),
-            y: Math.max(y, 120),
+            x: x,
+            y: y,
             rotation: (angle - Math.PI/2) * 180 / Math.PI
           });
         }
@@ -155,13 +202,21 @@ export default function SeatingChartGrid({
         
         for (let i = 0; i < outerSeats && position < seatCount; i++) {
           const angle = Math.PI - i * outerAngleStep;
-          const x = centerX + Math.cos(angle) * outerRadius;
-          const y = centerY + Math.sin(angle) * outerRadius;
+          let x = centerX + Math.cos(angle) * outerRadius;
+          let y = centerY + Math.sin(angle) * outerRadius;
+          
+          // Ensure seats don't go below whiteboard
+          y = Math.max(y, 120);
+          
+          // If this position overlaps with teacher desk, adjust it
+          if (isOverlappingTeacherDesk(x, y)) {
+            x = 120; // Move to the right of the desk
+          }
           
           positions.push({
             position: position++,
-            x: Math.max(x, 140),
-            y: Math.max(y, 120),
+            x: x,
+            y: y,
             rotation: (angle - Math.PI/2) * 180 / Math.PI
           });
         }
@@ -169,7 +224,7 @@ export default function SeatingChartGrid({
       }
 
       case 'circle': {
-        // Complete circle for democratic discussions - avoid overlaps
+        // Complete circle for democratic discussions - use overlap detection
         const centerX = 400;
         const centerY = 280;
         const radius = 160;
@@ -177,17 +232,21 @@ export default function SeatingChartGrid({
         
         for (let i = 0; i < seatCount; i++) {
           const angle = i * angleStep - Math.PI/2; // Start at top
-          const x = centerX + Math.cos(angle) * radius;
-          const y = centerY + Math.sin(angle) * radius;
+          let x = centerX + Math.cos(angle) * radius;
+          let y = centerY + Math.sin(angle) * radius;
           
-          // Ensure seats don't overlap with teacher area
-          const adjustedX = Math.max(x, 140);
-          const adjustedY = Math.max(y, 120);
+          // Ensure seats don't go below whiteboard
+          y = Math.max(y, 120);
+          
+          // If this position overlaps with teacher desk, adjust it
+          if (isOverlappingTeacherDesk(x, y)) {
+            x = 120; // Move to the right of the desk
+          }
           
           positions.push({
             position: i,
-            x: adjustedX,
-            y: adjustedY,
+            x: x,
+            y: y,
             rotation: angle * 180 / Math.PI + 90
           });
         }
@@ -211,10 +270,18 @@ export default function SeatingChartGrid({
           ];
           
           seats.forEach(seatOffset => {
+            let x = groupCenter.x + seatOffset.x;
+            let y = groupCenter.y + seatOffset.y;
+            
+            // If this position overlaps with teacher desk, adjust it
+            if (isOverlappingTeacherDesk(x, y)) {
+              x = 120; // Move to the right of the desk
+            }
+            
             positions.push({
               position: position++,
-              x: groupCenter.x + seatOffset.x,
-              y: groupCenter.y + seatOffset.y,
+              x: x,
+              y: y,
               rotation: 0
             });
           });
@@ -223,18 +290,27 @@ export default function SeatingChartGrid({
       }
 
       case 'pairs': {
-        // Dynamic pairs based on student count - avoid overlaps
+        // Dynamic pairs based on student count - use overlap detection
         let position = 0;
         const pairsNeeded = Math.ceil(seatCount / 2);
-        const rowsNeeded = Math.ceil(pairsNeeded / 2);
+        const columns = 3; // 3 columns of pairs
+        const rowsNeeded = Math.ceil(pairsNeeded / columns);
         
         for (let row = 0; row < rowsNeeded && position < seatCount; row++) {
-          for (let pairCol = 0; pairCol < 2 && position < seatCount; pairCol++) {
+          for (let pairCol = 0; pairCol < columns && position < seatCount; pairCol++) {
             for (let seat = 0; seat < 2 && position < seatCount; seat++) {
+              let x = pairCol * 200 + seat * 80 + 60; // Reduced spacing for 3 columns (200 instead of 280)
+              let y = row * 120 + 100; // Start lower to avoid whiteboard
+              
+              // If this position overlaps with teacher desk, adjust it
+              if (isOverlappingTeacherDesk(x, y)) {
+                x = 120; // Move to the right of the desk
+              }
+              
               positions.push({
                 position: position++,
-                x: pairCol * 280 + seat * 80 + 160, // Adjust spacing and start position
-                y: row * 120 + 100, // Start lower to avoid teacher area
+                x: x,
+                y: y,
                 rotation: 0
               });
             }
@@ -252,13 +328,15 @@ export default function SeatingChartGrid({
   };
 
   const studentCount = students.length;
-  const totalSeats = getSeatCount(layout, studentCount);
-  const layoutPositions = generateLayoutPositions(layout, totalSeats);
+  const totalSeats = studentCount > 0 ? getSeatCount(layout, studentCount) : 0;
+  const layoutPositions = studentCount > 0 ? generateLayoutPositions(layout, totalSeats) : [];
   
-  // Initialize seats if empty
+  // Initialize seats if empty, but only if there are students
   const seats = currentChart.length > 0 
     ? currentChart 
-    : Array.from({ length: totalSeats }, (_, i) => ({ position: i, studentId: null }));
+    : studentCount > 0 
+      ? Array.from({ length: totalSeats }, (_, i) => ({ position: i, studentId: null }))
+      : [];
 
   const getStudentById = (id: string | null): Student | undefined => {
     if (!id) return undefined;
@@ -330,6 +408,7 @@ export default function SeatingChartGrid({
             onDragEnd={handleDragEnd}
             isDragging={draggedStudent?.id === student.id}
             position={seat.position}
+            privacyMode={privacyMode}
           />
         </div>
       );
@@ -353,8 +432,8 @@ export default function SeatingChartGrid({
   };
 
   // Calculate classroom dimensions based on layout positions
-  const maxX = Math.max(...layoutPositions.map(p => p.x)) + 100;
-  const maxY = Math.max(...layoutPositions.map(p => p.y)) + 100;
+  const maxX = layoutPositions.length > 0 ? Math.max(...layoutPositions.map(p => p.x)) + 100 : 600;
+  const maxY = layoutPositions.length > 0 ? Math.max(...layoutPositions.map(p => p.y)) + 100 : 500;
 
   return (
     <div className="classroom-container">
@@ -399,10 +478,20 @@ export default function SeatingChartGrid({
           </div>
         </div>
 
-        {seats.map((seat) => {
-          const layoutPos = layoutPositions.find(pos => pos.position === seat.position);
-          return layoutPos ? renderSeat(seat, layoutPos) : null;
-        })}
+        {seats.length === 0 ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center text-muted-foreground">
+              <div className="text-4xl mb-4">👥</div>
+              <div className="text-lg font-medium mb-2">No Students Added</div>
+              <div className="text-sm">Upload student data to see the seating chart</div>
+            </div>
+          </div>
+        ) : (
+          seats.map((seat) => {
+            const layoutPos = layoutPositions.find(pos => pos.position === seat.position);
+            return layoutPos ? renderSeat(seat, layoutPos) : null;
+          })
+        )}
       </div>
     </div>
   );

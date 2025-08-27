@@ -10,7 +10,7 @@ import UploadArea from "@/components/upload-area";
 import SeatingChartGrid from "@/components/seating-chart-grid";
 import StudentTable from "@/components/student-table";
 import { generateSeatingChart } from "@/lib/seating-algorithms";
-import { Download, Save, Users, LayoutGrid, UserCog, Shuffle, Eraser, Printer } from "lucide-react";
+import { Download, Save, GraduationCap, LayoutGrid, UserCog, Shuffle, Eraser, Printer, Users, Database, Eye, EyeOff } from "lucide-react";
 import type { Student, SeatingChart as SeatingChartType } from "@shared/schema";
 
 export default function SeatingChart() {
@@ -18,6 +18,7 @@ export default function SeatingChart() {
   const [strategy, setStrategy] = useState<string>('mixed-ability');
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentChart, setCurrentChart] = useState<{position: number, studentId: string | null}[]>([]);
+  const [privacyMode, setPrivacyMode] = useState(false);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -149,6 +150,60 @@ export default function SeatingChart() {
     setCurrentChart([]);
   };
 
+  const handleDownloadLayoutImage = async () => {
+    try {
+      // Get the seating chart grid element
+      const chartElement = document.querySelector('[data-testid="seating-chart-grid"]') as HTMLElement;
+      
+      if (!chartElement) {
+        toast({
+          title: "Error",
+          description: "Could not find seating chart element",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Use html2canvas to capture the chart as an image
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(chartElement, {
+        backgroundColor: '#ffffff',
+        scale: 2, // Higher resolution for better quality
+        useCORS: true,
+        allowTaint: true,
+        width: chartElement.offsetWidth,
+        height: chartElement.offsetHeight,
+      });
+
+      // Convert canvas to blob and download
+      canvas.toBlob((blob: Blob | null) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `classroom-layout-${new Date().toISOString().split('T')[0]}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          
+          toast({
+            title: "Success",
+            description: "Layout image downloaded successfully",
+          });
+        }
+      }, 'image/png');
+      
+    } catch (error) {
+      console.error('Error downloading layout image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to download layout image",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handlePrintChart = () => {
     window.print();
   };
@@ -240,7 +295,7 @@ export default function SeatingChart() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <div className="bg-primary text-primary-foreground w-10 h-10 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5" />
+                <GraduationCap className="w-5 h-5" />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-foreground">Classroom Seating Chart Generator</h1>
@@ -249,20 +304,38 @@ export default function SeatingChart() {
             </div>
             <div className="flex items-center space-x-4">
               <Button 
-                variant="secondary" 
-                onClick={handlePrintChart}
-                data-testid="button-export-chart"
+                onClick={handleGenerateChart}
+                disabled={isGenerating || students.length === 0}
+                data-testid="button-generate-chart-header"
               >
-                <Download className="w-4 h-4 mr-2" />
-                Export Chart
+                {isGenerating ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2" />
+                ) : (
+                  <Shuffle className="w-4 h-4 mr-2" />
+                )}
+                Generate Chart
               </Button>
               <Button 
-                onClick={handleSaveChart}
-                disabled={currentChart.length === 0 || saveChartMutation.isPending}
-                data-testid="button-save-layout"
+                variant="outline" 
+                onClick={() => setPrivacyMode(!privacyMode)}
+                data-testid="button-privacy-toggle"
+                className={privacyMode ? "bg-muted" : ""}
               >
-                <Save className="w-4 h-4 mr-2" />
-                Save Layout
+                {privacyMode ? (
+                  <EyeOff className="w-4 h-4 mr-2" />
+                ) : (
+                  <Eye className="w-4 h-4 mr-2" />
+                )}
+                {privacyMode ? "Privacy On" : "Privacy Off"}
+              </Button>
+              <Button 
+                variant="secondary" 
+                onClick={handleDownloadLayoutImage}
+                disabled={currentChart.length === 0}
+                data-testid="button-download-layout-image"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download Layout as Image
               </Button>
             </div>
           </div>
@@ -279,7 +352,7 @@ export default function SeatingChart() {
             <Card>
               <CardContent className="p-6">
                 <h2 className="text-lg font-semibold mb-4 text-card-foreground">
-                  <Users className="w-5 h-5 inline mr-2 text-primary" />
+                  <Database className="w-5 h-5 inline mr-2 text-primary" />
                   Student Data
                 </h2>
                 
@@ -531,8 +604,14 @@ export default function SeatingChart() {
               <CardContent className="p-6">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold text-card-foreground">
-                    <Users className="w-6 h-6 inline mr-2 text-primary" />
+                    <LayoutGrid className="w-6 h-6 inline mr-2 text-primary" />
                     Seating Chart
+                    {privacyMode && (
+                      <Badge variant="outline" className="ml-2 text-xs">
+                        <EyeOff className="w-3 h-3 mr-1" />
+                        Privacy Mode
+                      </Badge>
+                    )}
                   </h2>
                   <div className="flex items-center space-x-3">
                     <span className="text-sm text-muted-foreground">Layout:</span>
@@ -549,26 +628,29 @@ export default function SeatingChart() {
                   students={students}
                   currentChart={currentChart}
                   onChartChange={setCurrentChart}
+                  privacyMode={privacyMode}
                 />
                 
                 {/* Legend */}
-                <div className="mt-6 bg-muted rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-foreground mb-3">Skill Level Legend</h3>
-                  <div className="flex flex-wrap gap-4 text-xs">
-                    <div className="flex items-center space-x-2">
-                      <span className="inline-block w-3 h-3 rounded-full bg-primary"></span>
-                      <span className="text-muted-foreground">Beginner</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="inline-block w-3 h-3 rounded-full bg-accent"></span>
-                      <span className="text-muted-foreground">Intermediate</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="inline-block w-3 h-3 rounded-full bg-secondary"></span>
-                      <span className="text-muted-foreground">Advanced</span>
+                {!privacyMode && (
+                  <div className="mt-6 bg-muted rounded-lg p-4">
+                    <h3 className="text-sm font-medium text-foreground mb-3">Skill Level Legend</h3>
+                    <div className="flex flex-wrap gap-4 text-xs">
+                      <div className="flex items-center space-x-2">
+                        <span className="inline-block w-3 h-3 rounded-full bg-primary"></span>
+                        <span className="text-muted-foreground">Beginner</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="inline-block w-3 h-3 rounded-full bg-accent"></span>
+                        <span className="text-muted-foreground">Intermediate</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="inline-block w-3 h-3 rounded-full bg-secondary"></span>
+                        <span className="text-muted-foreground">Advanced</span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
             

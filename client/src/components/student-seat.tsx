@@ -7,6 +7,7 @@ interface StudentSeatProps {
   onDragEnd: () => void;
   isDragging: boolean;
   position: number;
+  privacyMode?: boolean;
 }
 
 export default function StudentSeat({ 
@@ -14,7 +15,8 @@ export default function StudentSeat({
   onDragStart, 
   onDragEnd, 
   isDragging,
-  position 
+  position,
+  privacyMode = false
 }: StudentSeatProps) {
   
   const getSkillLevelColor = (level: string) => {
@@ -55,35 +57,42 @@ export default function StudentSeat({
       onDragEnd={handleDragEnd}
       data-testid={`student-seat-${student.id}`}
       data-student-id={student.id}
-      title={`${student.name} - ${student.skillLevel} - ${getPrimaryLanguageDisplay()}`}
+      title={privacyMode ? `${student.name} (Seat ${position + 1})` : `${student.name} - ${student.skillLevel} - ${getPrimaryLanguageDisplay()}`}
     >
+      {/* Always show student name */}
       <div className="text-sm font-bold text-foreground leading-tight" style={{fontSize: '13px'}}>
         {getFirstName()}
       </div>
-      <div className="text-xs text-muted-foreground mt-1 leading-tight" style={{fontSize: '10px'}}>
-        {getPrimaryLanguageDisplay()}
-      </div>
-      <div className="flex justify-center mt-1">
-        <span 
-          className={`inline-block w-2 h-2 rounded-full ${getSkillLevelColor(student.skillLevel)}`}
-          title={student.skillLevel}
-        />
-      </div>
       
-      {/* Show compatibility indicators if present */}
-      {((student.worksWellWith?.length || 0) > 0 || (student.avoidPairing?.length || 0) > 0) && (
-        <div className="flex justify-center mt-1 space-x-1">
-          {(student.worksWellWith?.length || 0) > 0 && (
-            <span className="text-xs text-green-600" title="Has preferred partners">
-              ✓
-            </span>
+      {!privacyMode && (
+        // Normal mode: Show additional student information
+        <>
+          <div className="text-xs text-muted-foreground mt-1 leading-tight" style={{fontSize: '10px'}}>
+            {getPrimaryLanguageDisplay()}
+          </div>
+          <div className="flex justify-center mt-1">
+            <span 
+              className={`inline-block w-2 h-2 rounded-full ${getSkillLevelColor(student.skillLevel)}`}
+              title={student.skillLevel}
+            />
+          </div>
+          
+          {/* Show compatibility indicators if present */}
+          {((student.worksWellWith?.length || 0) > 0 || (student.avoidPairing?.length || 0) > 0) && (
+            <div className="flex justify-center mt-1 space-x-1">
+              {(student.worksWellWith?.length || 0) > 0 && (
+                <span className="text-xs text-green-600" title="Has preferred partners">
+                  ✓
+                </span>
+              )}
+              {(student.avoidPairing?.length || 0) > 0 && (
+                <span className="text-xs text-red-600" title="Has constraints">
+                  ⚠
+                </span>
+              )}
+            </div>
           )}
-          {(student.avoidPairing?.length || 0) > 0 && (
-            <span className="text-xs text-red-600" title="Has constraints">
-              ⚠
-            </span>
-          )}
-        </div>
+        </>
       )}
     </div>
   );
