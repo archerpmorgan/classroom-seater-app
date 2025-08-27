@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,11 @@ export default function SeatingChart() {
   const { data: seatingCharts = [] } = useQuery<SeatingChartType[]>({
     queryKey: ['/api/seating-charts'],
   });
+
+  // Clear chart when students change or layout changes
+  useEffect(() => {
+    setCurrentChart([]);
+  }, [students.length, layout]);
 
   const deleteAllStudentsMutation = useMutation({
     mutationFn: () => apiRequest('DELETE', '/api/students'),
