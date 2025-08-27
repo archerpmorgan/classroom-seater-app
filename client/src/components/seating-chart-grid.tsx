@@ -25,29 +25,39 @@ export default function SeatingChartGrid({
   const [draggedStudent, setDraggedStudent] = useState<Student | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<number | null>(null);
 
-  const getSeatCount = (layoutType: string) => {
-    switch (layoutType) {
-      case 'traditional-rows': return 30;
-      case 'stadium': return 28;
-      case 'horseshoe': return 20;
-      case 'double-horseshoe': return 32;
-      case 'circle': return 16;
-      case 'groups': return 24;
-      case 'pairs': return 20;
-      default: return 24;
+  const getSeatCount = (layoutType: string, studentCount: number) => {
+    // For groups layout, always show complete groups (4 seats per group)
+    if (layoutType === 'groups') {
+      const groupsNeeded = Math.ceil(studentCount / 4);
+      return groupsNeeded * 4;
     }
+    
+    // For other layouts, show only the seats needed
+    const maxSeats = {
+      'traditional-rows': 30,
+      'stadium': 28,
+      'horseshoe': 20,
+      'double-horseshoe': 32,
+      'circle': 16,
+      'pairs': 20
+    };
+    
+    const maxForLayout = maxSeats[layoutType as keyof typeof maxSeats] || 24;
+    return Math.min(studentCount, maxForLayout);
   };
 
-  const generateLayoutPositions = (layoutType: string): SeatPosition[] => {
-    const seatCount = getSeatCount(layoutType);
+  const generateLayoutPositions = (layoutType: string, seatCount: number): SeatPosition[] => {
     const positions: SeatPosition[] = [];
 
     switch (layoutType) {
       case 'traditional-rows': {
-        // 6 rows of 5 desks each, evenly spaced
+        // Dynamic rows based on student count
+        const seatsPerRow = 5;
+        const rowsNeeded = Math.ceil(seatCount / seatsPerRow);
         let position = 0;
-        for (let row = 0; row < 6; row++) {
-          for (let col = 0; col < 5; col++) {
+        
+        for (let row = 0; row < rowsNeeded && position < seatCount; row++) {
+          for (let col = 0; col < seatsPerRow && position < seatCount; col++) {
             positions.push({
               position: position++,
               x: col * 120 + 60,
@@ -61,13 +71,15 @@ export default function SeatingChartGrid({
       case 'stadium': {
         // V-shaped angled rows for better sightlines
         let position = 0;
-        for (let row = 0; row < 4; row++) {
-          const seatsInRow = row === 0 ? 6 : row === 1 ? 7 : row === 2 ? 8 : 7;
-          const startX = (6 - seatsInRow) * 60 + 60;
-          const angleOffset = row * 20; // Progressive angle
+        const rowSeats = [6, 7, 8, 7]; // Seats per row pattern
+        
+        for (let row = 0; row < 4 && position < seatCount; row++) {
+          const seatsInThisRow = Math.min(rowSeats[row], seatCount - position);
+          const startX = (6 - seatsInThisRow) * 60 + 60;
+          const angleOffset = row * 20;
           
-          for (let col = 0; col < seatsInRow; col++) {
-            const centerCol = (seatsInRow - 1) / 2;
+          for (let col = 0; col < seatsInThisRow; col++) {
+            const centerCol = (seatsInThisRow - 1) / 2;
             const distanceFromCenter = Math.abs(col - centerCol);
             
             positions.push({
@@ -159,15 +171,16 @@ export default function SeatingChartGrid({
       }
 
       case 'groups': {
-        // 6 groups of 4 students each (pods/clusters)
+        // Dynamic groups based on student count (always show complete groups of 4)
         let position = 0;
+        const groupsNeeded = Math.ceil(seatCount / 4);
         const groupPositions = [
           { x: 150, y: 120 }, { x: 400, y: 120 }, { x: 650, y: 120 },
           { x: 150, y: 320 }, { x: 400, y: 320 }, { x: 650, y: 320 }
         ];
         
-        groupPositions.forEach(groupCenter => {
-          // 4 seats around each group center
+        for (let g = 0; g < groupsNeeded && g < groupPositions.length; g++) {
+          const groupCenter = groupPositions[g];
           const seats = [
             { x: -40, y: -30 }, { x: 40, y: -30 },
             { x: -40, y: 30 }, { x: 40, y: 30 }
@@ -181,16 +194,19 @@ export default function SeatingChartGrid({
               rotation: 0
             });
           });
-        });
+        }
         break;
       }
 
       case 'pairs': {
-        // 10 pairs of desks arranged in rows
+        // Dynamic pairs based on student count
         let position = 0;
-        for (let row = 0; row < 5; row++) {
-          for (let pairCol = 0; pairCol < 2; pairCol++) {
-            for (let seat = 0; seat < 2; seat++) {
+        const pairsNeeded = Math.ceil(seatCount / 2);
+        const rowsNeeded = Math.ceil(pairsNeeded / 2);
+        
+        for (let row = 0; row < rowsNeeded && position < seatCount; row++) {
+          for (let pairCol = 0; pairCol < 2 && position < seatCount; pairCol++) {
+            for (let seat = 0; seat < 2 && position < seatCount; seat++) {
               positions.push({
                 position: position++,
                 x: pairCol * 300 + seat * 80 + 150,
@@ -205,14 +221,15 @@ export default function SeatingChartGrid({
 
       default:
         // Fallback to traditional rows
-        return generateLayoutPositions('traditional-rows');
+        return generateLayoutPositions('traditional-rows', seatCount);
     }
 
-    return positions.slice(0, seatCount);
+    return positions;
   };
 
-  const totalSeats = getSeatCount(layout);
-  const layoutPositions = generateLayoutPositions(layout);
+  const studentCount = students.length;
+  const totalSeats = getSeatCount(layout, studentCount);
+  const layoutPositions = generateLayoutPositions(layout, totalSeats);
   
   // Initialize seats if empty
   const seats = currentChart.length > 0 

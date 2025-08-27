@@ -68,17 +68,25 @@ export default function SeatingChart() {
     },
   });
 
-  const getSeatCount = (layoutType: string) => {
-    switch (layoutType) {
-      case 'traditional-rows': return 30;
-      case 'stadium': return 28;
-      case 'horseshoe': return 20;
-      case 'double-horseshoe': return 32;
-      case 'circle': return 16;
-      case 'groups': return 24;
-      case 'pairs': return 20;
-      default: return 24;
+  const getSeatCount = (layoutType: string, studentCount: number) => {
+    // For groups layout, always show complete groups (4 seats per group)
+    if (layoutType === 'groups') {
+      const groupsNeeded = Math.ceil(studentCount / 4);
+      return groupsNeeded * 4;
     }
+    
+    // For other layouts, show only the seats needed
+    const maxSeats = {
+      'traditional-rows': 30,
+      'stadium': 28,
+      'horseshoe': 20,
+      'double-horseshoe': 32,
+      'circle': 16,
+      'pairs': 20
+    };
+    
+    const maxForLayout = maxSeats[layoutType as keyof typeof maxSeats] || 24;
+    return Math.min(studentCount, maxForLayout);
   };
 
   const handleGenerateChart = async () => {
@@ -93,7 +101,7 @@ export default function SeatingChart() {
 
     setIsGenerating(true);
     try {
-      const totalSeats = getSeatCount(layout);
+      const totalSeats = getSeatCount(layout, students.length);
       const chart = generateSeatingChart(students, strategy, totalSeats);
       setCurrentChart(chart);
       
@@ -309,18 +317,7 @@ export default function SeatingChart() {
                     {getLayoutDescription(layout)}
                   </div>
                   <div className="mt-2 flex justify-between text-xs">
-                    <span>Seats: {(() => {
-                      switch (layout) {
-                        case 'traditional-rows': return 30;
-                        case 'stadium': return 28;
-                        case 'horseshoe': return 20;
-                        case 'double-horseshoe': return 32;
-                        case 'circle': return 16;
-                        case 'groups': return 24;
-                        case 'pairs': return 20;
-                        default: return 24;
-                      }
-                    })()}</span>
+                    <span>Seats: {getSeatCount(layout, students.length)}</span>
                     <span>Best for: {getLayoutPurpose(layout)}</span>
                   </div>
                 </div>
