@@ -1,10 +1,6 @@
 # Classroom Seater
 
-A modern, intelligent web application for creating and managing classroom seating charts with advanced features for educators.
-
-## 🎯 Overview
-
-Classroom Seater helps teachers create optimal seating arrangements using smart algorithms, interactive drag-and-drop tools, and comprehensive student data management. Perfect for classrooms of any size, from elementary to university level.
+An app for creating and managing classroom seating charts.
 
 ## ✨ Key Features
 
