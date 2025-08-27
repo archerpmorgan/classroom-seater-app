@@ -21,9 +21,9 @@ export default function StudentSeat({
   
   const getSkillLevelColor = (level: string) => {
     switch (level) {
-      case 'beginner': return 'bg-primary';
-      case 'intermediate': return 'bg-accent';
-      case 'advanced': return 'bg-secondary';
+      case 'beginner': return 'bg-green-500';
+      case 'intermediate': return 'bg-yellow-500';
+      case 'advanced': return 'bg-blue-500';
       default: return 'bg-muted';
     }
   };
@@ -34,6 +34,19 @@ export default function StudentSeat({
 
   const getPrimaryLanguageDisplay = () => {
     return student.primaryLanguage;
+  };
+
+  const getNameFontSize = () => {
+    const firstName = getFirstName();
+    const length = firstName.length;
+    
+    // Calculate font size based on name length
+    // Seat width is about 80px, so we adjust accordingly
+    if (length <= 4) return '13px';      // Short names - default size
+    else if (length <= 6) return '12px'; // Medium names - slightly smaller
+    else if (length <= 8) return '11px'; // Long names - smaller
+    else if (length <= 10) return '10px'; // Very long names - much smaller
+    else return '9px';                   // Extremely long names - minimum readable size
   };
 
   const handleDragStart = (e: React.DragEvent) => {
@@ -60,7 +73,7 @@ export default function StudentSeat({
       title={privacyMode ? `${student.name} (Seat ${position + 1})` : `${student.name} - ${student.skillLevel} - ${getPrimaryLanguageDisplay()}`}
     >
       {/* Always show student name */}
-      <div className="text-sm font-bold text-foreground leading-tight" style={{fontSize: '13px'}}>
+      <div className="font-bold text-foreground leading-tight" style={{fontSize: getNameFontSize()}}>
         {getFirstName()}
       </div>
       

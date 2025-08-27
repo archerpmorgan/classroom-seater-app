@@ -132,13 +132,17 @@ export default function StudentTable({ students, isLoading }: StudentTableProps)
   };
 
   const getSkillLevelBadge = (level: string) => {
-    const variants: Record<string, "default" | "secondary" | "outline"> = {
-      beginner: "default",
-      intermediate: "secondary",
-      advanced: "outline",
+    const getBadgeStyle = (level: string) => {
+      switch (level) {
+        case 'beginner': return 'bg-green-500 text-white hover:bg-green-600';
+        case 'intermediate': return 'bg-yellow-500 text-white hover:bg-yellow-600';
+        case 'advanced': return 'bg-blue-500 text-white hover:bg-blue-600';
+        default: return 'bg-muted text-muted-foreground';
+      }
     };
+    
     return (
-      <Badge variant={variants[level] || "default"}>
+      <Badge className={getBadgeStyle(level)}>
         {level}
       </Badge>
     );

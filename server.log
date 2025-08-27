@@ -16,3 +16,74 @@ Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
 5:21:47 PM [express] GET /api/students 200 in 0ms :: []
 5:22:42 PM [express] POST /api/students/upload-csv 200 in 4ms :: {"message":"Successfully imported 2…
 5:22:42 PM [express] GET /api/students 200 in 1ms :: [{"name":"Alice Johnson","primaryLanguage":"Eng…
+5:34:27 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:34:35 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:34:43 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:34:50 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:34:59 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:34:59 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:35:06 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:35:15 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:35:26 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:35:33 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:35:42 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:35:48 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:35:48 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:36:14 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:36:52 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:44:26 PM [express] GET /api/students 304 in 1ms :: [{"name":"Alice Johnson","primaryLanguage":"Eng…
+5:44:26 PM [express] GET /api/seating-charts 304 in 0ms :: []
+5:47:11 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:48:56 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:49:02 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:49:02 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:49:08 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:49:13 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:49:13 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:49:19 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:49:19 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:49:35 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:50:23 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:50:48 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:51:06 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:54:41 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:57:05 PM [express] PUT /api/students/07e18d65-d382-4a1c-86f6-599566129988 200 in 7ms :: {"name":"A…
+5:57:05 PM [express] GET /api/students 200 in 0ms :: [{"name":"Alicelongnamethethird Johnson","prima…
+6:04:42 PM [vite] hmr update /src/components/student-seat.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:04:48 PM [vite] hmr update /src/components/student-seat.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:05:13 PM [vite] hmr update /src/components/student-seat.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:06:48 PM [express] GET /api/students 304 in 0ms :: [{"name":"Alicelongnamethethird Johnson","prima…
+6:06:48 PM [express] GET /api/seating-charts 304 in 0ms :: []
+6:14:55 PM [vite] hmr update /src/components/student-seat.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:22:45 PM [vite] hmr update /src/components/student-seat.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:23:16 PM [vite] hmr update /src/components/student-seat.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:23:26 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:23:40 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:23:41 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:23:47 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:23:47 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:23:47 PM [vite] hmr update /src/components/student-seat.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:23:47 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:23:47 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:24:16 PM [express] PUT /api/students/07e18d65-d382-4a1c-86f6-599566129988 200 in 1ms :: {"name":"A…
+6:24:16 PM [express] GET /api/students 200 in 0ms :: [{"name":"Alicelongname Johnson","primaryLangua…
+6:26:04 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:26:04 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:26:04 PM [vite] hmr update /src/components/student-seat.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:26:39 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:26:45 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:27:34 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:27:45 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:27:49 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:27:49 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:29:18 PM [vite] hmr update /src/components/student-seat.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:29:34 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:29:42 PM [vite] hmr update /src/components/student-seat.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:29:42 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:30:09 PM [express] GET /api/students 304 in 1ms :: [{"name":"Alicelongname Johnson","primaryLangua…
+6:30:09 PM [express] GET /api/seating-charts 304 in 0ms :: []
+6:30:51 PM [vite] hmr update /src/components/student-seat.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:30:51 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:40:54 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:41:00 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+6:57:48 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt

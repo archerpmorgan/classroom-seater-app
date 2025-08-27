@@ -10,7 +10,7 @@ import UploadArea from "@/components/upload-area";
 import SeatingChartGrid from "@/components/seating-chart-grid";
 import StudentTable from "@/components/student-table";
 import { generateSeatingChart } from "@/lib/seating-algorithms";
-import { Download, Save, GraduationCap, LayoutGrid, UserCog, Shuffle, Eraser, Printer, Users, Database, Eye, EyeOff, ArrowLeftRight, X, Undo2, Plus, RefreshCw } from "lucide-react";
+import { Download, Save, GraduationCap, LayoutGrid, UserCog, Shuffle, Eraser, Users, Database, Eye, EyeOff, ArrowLeftRight, X, Undo2, Plus, RefreshCw, Camera } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Student, SeatingChart as SeatingChartType } from "@shared/schema";
 
@@ -168,9 +168,20 @@ export default function SeatingChart() {
       // Save initial chart to history
       saveToHistory(chart);
       
+      // Create detailed success message
+      const layoutName = getLayoutName(layout);
+      const isGroupingLayout = layout === 'groups' || layout === 'pairs';
+      const strategyDescription = isGroupingLayout ? getStrategyDescription(strategy).split('.')[0] : null;
+      
+      let description = `${layoutName} seating chart generated successfully`;
+      if (isGroupingLayout && strategyDescription) {
+        description += ` using ${strategy.replace(/-/g, ' ')} strategy`;
+      }
+      description += ` with ${students.length} students in ${totalSeats} seats.`;
+      
       toast({
-        title: "Success",
-        description: "Seating chart generated successfully",
+        title: "Seating Chart Generated",
+        description: description,
       });
     } catch (error) {
       toast({
@@ -393,9 +404,7 @@ export default function SeatingChart() {
     });
   };
 
-  const handlePrintChart = () => {
-    window.print();
-  };
+
 
   const getSkillLevelColor = (level: string) => {
     switch (level) {
@@ -480,40 +489,23 @@ export default function SeatingChart() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
-              <div className="bg-primary text-primary-foreground w-10 h-10 rounded-lg flex items-center justify-center">
-                <GraduationCap className="w-5 h-5" />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-foreground">Classroom Seating Chart Generator</h1>
-                <p className="text-sm text-muted-foreground">Organize your students effectively</p>
-              </div>
+              <h1 className="text-xl font-semibold text-foreground">Classroom Seating Chart Generator</h1>
             </div>
             <TooltipProvider>
               <div className="flex items-center space-x-4">
-              <Button 
-                onClick={handleGenerateChart}
-                disabled={isGenerating || students.length === 0}
-                data-testid="button-generate-chart-header"
-              >
-                {isGenerating ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2" />
-                ) : (
-                  <Shuffle className="w-4 h-4 mr-2" />
-                )}
-                Generate Chart
-              </Button>
+
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button 
-                    variant="secondary" 
-                    size="icon"
-                    onClick={handleDownloadLayoutImage}
-                    disabled={currentChart.length === 0}
-                    data-testid="button-download-layout-image"
-                  >
-                    <Download className="w-4 h-4" />
-                  </Button>
+                                     <Button 
+                     variant="secondary" 
+                     size="icon"
+                     onClick={handleDownloadLayoutImage}
+                     disabled={currentChart.length === 0}
+                     data-testid="button-download-layout-image"
+                   >
+                     <Camera className="w-4 h-4" />
+                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Download Layout as Image</p>
@@ -601,6 +593,25 @@ export default function SeatingChart() {
                       </div>
                     </div>
                     
+                    {/* Generate Chart Button - Only shown when students are loaded */}
+                    {students.length > 0 && (
+                      <div className="mt-3">
+                        <Button 
+                          className="w-full" 
+                          onClick={handleGenerateChart}
+                          disabled={isGenerating}
+                          data-testid="button-generate-chart"
+                        >
+                          {isGenerating ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2" />
+                          ) : (
+                            <Shuffle className="w-4 h-4 mr-2" />
+                          )}
+                          Generate Chart
+                        </Button>
+                      </div>
+                    )}
+                    
                     {/* Clear Data Button */}
                     <div className="mt-3">
                       <Button 
@@ -673,7 +684,7 @@ export default function SeatingChart() {
                       className="text-primary"
                       data-testid="input-layout-stadium"
                     />
-                    <span className="text-sm">Stadium/V-Shape</span>
+                    <span className="text-sm">Stadium/V-Shape <span className="text-xs text-red-600">🚧 (Under Development)</span></span>
                   </label>
                   <label className="flex items-center space-x-3 cursor-pointer">
                     <input 
@@ -685,7 +696,7 @@ export default function SeatingChart() {
                       className="text-primary"
                       data-testid="input-layout-horseshoe"
                     />
-                    <span className="text-sm">Horseshoe (U-Shape)</span>
+                    <span className="text-sm">Horseshoe (U-Shape) <span className="text-xs text-red-600">🚧 (Under Development)</span></span>
                   </label>
                   <label className="flex items-center space-x-3 cursor-pointer">
                     <input 
@@ -697,7 +708,7 @@ export default function SeatingChart() {
                       className="text-primary"
                       data-testid="input-layout-double-horseshoe"
                     />
-                    <span className="text-sm">Double Horseshoe</span>
+                    <span className="text-sm">Double Horseshoe <span className="text-xs text-red-600">🚧 (Under Development)</span></span>
                   </label>
                   <label className="flex items-center space-x-3 cursor-pointer">
                     <input 
@@ -709,7 +720,7 @@ export default function SeatingChart() {
                       className="text-primary"
                       data-testid="input-layout-circle"
                     />
-                    <span className="text-sm">Circle/Roundtable</span>
+                    <span className="text-sm">Circle/Roundtable <span className="text-xs text-red-600">🚧 (Under Development)</span></span>
                   </label>
                   <label className="flex items-center space-x-3 cursor-pointer">
                     <input 
@@ -793,19 +804,7 @@ export default function SeatingChart() {
                   </div>
                 )}
                 
-                <Button 
-                  className="w-full mt-4" 
-                  onClick={handleGenerateChart}
-                  disabled={isGenerating || students.length === 0}
-                  data-testid="button-generate-chart"
-                >
-                  {isGenerating ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2" />
-                  ) : (
-                    <Shuffle className="w-4 h-4 mr-2" />
-                  )}
-                  {layout !== 'groups' && layout !== 'pairs' ? 'Generate Random Chart' : 'Generate Chart'}
-                </Button>
+
               </CardContent>
             </Card>
 
@@ -842,15 +841,7 @@ export default function SeatingChart() {
                     <Eraser className="w-4 h-4 mr-2 text-muted-foreground" />
                     Clear Chart
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start text-sm" 
-                    onClick={handlePrintChart}
-                    data-testid="button-print-chart"
-                  >
-                    <Printer className="w-4 h-4 mr-2 text-muted-foreground" />
-                    Print Chart
-                  </Button>
+
                 </div>
               </CardContent>
             </Card>
@@ -865,8 +856,7 @@ export default function SeatingChart() {
                 <div className="flex justify-between items-center mb-6">
                   <div className="flex items-center space-x-3">
                     <h2 className="text-xl font-semibold text-card-foreground">
-                      <LayoutGrid className="w-6 h-6 inline mr-2 text-primary" />
-                      Seating Chart
+                      Seating Chart Workshop
                     </h2>
                     
                     {/* Privacy Mode Toggle */}
@@ -953,27 +943,6 @@ export default function SeatingChart() {
                     deskSwapMode={deskSwapMode}
                   />
                 </TooltipProvider>
-                
-                {/* Legend */}
-                {!privacyMode && (
-                  <div className="mt-6 bg-muted rounded-lg p-4">
-                    <h3 className="text-sm font-medium text-foreground mb-3">Skill Level Legend</h3>
-                    <div className="flex flex-wrap gap-4 text-xs">
-                      <div className="flex items-center space-x-2">
-                        <span className="inline-block w-3 h-3 rounded-full bg-primary"></span>
-                        <span className="text-muted-foreground">Beginner</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="inline-block w-3 h-3 rounded-full bg-accent"></span>
-                        <span className="text-muted-foreground">Intermediate</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="inline-block w-3 h-3 rounded-full bg-secondary"></span>
-                        <span className="text-muted-foreground">Advanced</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
             
