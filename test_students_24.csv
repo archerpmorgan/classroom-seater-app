@@ -1,0 +1,25 @@
+name,primaryLanguage,skillLevel,worksWellWith,avoidPairing,notes
+Alice Johnson,English,intermediate,Bob Martinez;Sarah Kim,,Good at helping others
+Bob Martinez,Spanish,beginner,Alice Johnson,,Needs extra support with reading
+Sarah Kim,Korean,advanced,Alice Johnson,David Chen,Strong math skills
+David Chen,Mandarin,intermediate,,Sarah Kim,Sometimes disruptive in groups
+Emma Wilson,English,beginner,Fatima Al-Rashid,,Very quiet student
+Fatima Al-Rashid,Arabic,intermediate,Emma Wilson;Hassan Omar,,Excellent collaboration skills
+Grace Thompson,English,advanced,Hassan Omar,,Natural leader
+Hassan Omar,Arabic,intermediate,Fatima Al-Rashid;Grace Thompson,,Works well in teams
+Isabella Rodriguez,Spanish,beginner,Juan Morales,,Needs encouragement to participate
+Juan Morales,Spanish,intermediate,Isabella Rodriguez,Kevin O'Brien,Helpful with Spanish speakers
+Kevin O'Brien,English,advanced,,Juan Morales,Can be impatient with slower learners
+Lily Zhang,Mandarin,beginner,David Chen;Maria Santos,,Learning English quickly
+Maria Santos,Portuguese,intermediate,Lily Zhang;Nina Patel,,Bilingual Portuguese-English
+Nina Patel,Hindi,advanced,Maria Santos,,Excellent problem solver
+Oliver Smith,English,intermediate,Priya Sharma,,Good focus and attention
+Priya Sharma,Hindi,beginner,Oliver Smith;Nina Patel,,Shy but very bright
+Quinn Taylor,English,advanced,Ryan Murphy,,Independent worker
+Ryan Murphy,English,intermediate,Quinn Taylor,Tommy Anderson,Good study partner
+Sofia Gonzalez,Spanish,beginner,Isabella Rodriguez,,Creative thinker
+Tommy Anderson,English,advanced,,Ryan Murphy,Sometimes off-task
+Uma Krishnan,Tamil,intermediate,Priya Sharma,,Strong in science subjects
+Victor Lee,Korean,beginner,Sarah Kim,,New to English
+William Brown,English,intermediate,Oliver Smith,,Steady worker
+Zoe Martinez,Spanish,advanced,Sofia Gonzalez,,Helps other Spanish speakers

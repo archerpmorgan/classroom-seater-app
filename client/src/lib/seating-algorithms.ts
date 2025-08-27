@@ -42,7 +42,7 @@ export function generateSeatingChart(
         arrangement = generateSkillClusteringArrangement(students);
         break;
       case 'language-support':
-        arrangement = generateLanguageSupportArrangement(students);
+        arrangement = generateLanguageSupportArrangement(students, layout);
         break;
       case 'collaborative-pairs':
         arrangement = generateCollaborativeArrangement(students);
@@ -107,48 +107,92 @@ function generateSkillClusteringArrangement(students: Student[]): Student[] {
   return [...beginners, ...intermediate, ...advanced];
 }
 
-function generateLanguageSupportArrangement(students: Student[]): Student[] {
-  // Group students who share primary languages
+function generateLanguageSupportArrangement(students: Student[], layout?: string): Student[] {
+  // Group students by primary language
   const languageGroups = new Map<string, Student[]>();
   
   students.forEach(student => {
     const language = student.primaryLanguage;
-    
     if (!languageGroups.has(language)) {
       languageGroups.set(language, []);
     }
     languageGroups.get(language)!.push(student);
   });
   
-  // Arrange students to be near others who share their languages, avoiding conflicts
+  // Sort language groups by size (largest first) to prioritize larger groups
+  const sortedLanguageGroups = Array.from(languageGroups.entries())
+    .sort(([, a], [, b]) => b.length - a.length);
+  
   const arranged: Student[] = [];
   const used = new Set<string>();
   
-  for (const [language, studentsInGroup] of Array.from(languageGroups.entries())) {
-    if (studentsInGroup.length > 1) {
-      studentsInGroup.forEach((student: Student) => {
-        if (!used.has(student.id) && canPlaceStudent(student, arranged.slice(-2))) {
-          arranged.push(student);
-          used.add(student.id);
+  // Layout-specific grouping strategy
+  const isGroupsLayout = layout === 'groups';
+  const isPairsLayout = layout === 'pairs';
+  const groupSize = isGroupsLayout ? 4 : isPairsLayout ? 2 : 1;
+  
+  // First, create optimal language-based groups
+  for (const [language, studentsInGroup] of sortedLanguageGroups) {
+    if (studentsInGroup.length >= 2) {
+      // For groups layout: Try to create complete groups of 4 with same language
+      // For pairs layout: Try to create pairs with same language
+      const studentsToPlace = [...studentsInGroup];
+      
+      while (studentsToPlace.length > 0) {
+        const currentGroup: Student[] = [];
+        const currentGroupSize = Math.min(groupSize, studentsToPlace.length);
+        
+        // Try to fill the current group with students from the same language
+        for (let i = 0; i < currentGroupSize; i++) {
+          const student = studentsToPlace.find(s => !used.has(s.id));
+          if (student) {
+            currentGroup.push(student);
+            used.add(student.id);
+            studentsToPlace.splice(studentsToPlace.indexOf(student), 1);
+          }
         }
-      });
+        
+        // Add the current group to the arrangement
+        arranged.push(...currentGroup);
+      }
     }
   }
   
-  // Add remaining students, checking for avoid conflicts
+  // Then place remaining students (those without language partners or from single-student language groups)
   students.forEach(student => {
     if (!used.has(student.id)) {
-      if (canPlaceStudent(student, arranged.slice(-2))) {
-        arranged.push(student);
-      } else {
-        // Insert with spacing to avoid conflicts
-        const safeIndex = Math.max(0, arranged.length - 2);
-        arranged.splice(safeIndex, 0, student);
+      // Find the best position that minimizes conflicts
+      let bestPosition = arranged.length;
+      let minConflicts = Infinity;
+      
+      for (let i = 0; i <= arranged.length; i++) {
+        const testArrangement = [...arranged.slice(0, i), student, ...arranged.slice(i)];
+        const conflicts = countAvoidConflicts(testArrangement.slice(Math.max(0, i - 1), i + 1));
+        if (conflicts < minConflicts) {
+          minConflicts = conflicts;
+          bestPosition = i;
+        }
       }
+      
+      arranged.splice(bestPosition, 0, student);
+      used.add(student.id);
     }
   });
   
   return arranged;
+}
+
+// Helper function to count avoid conflicts in a group of students
+function countAvoidConflicts(students: Student[]): number {
+  let conflicts = 0;
+  for (let i = 0; i < students.length; i++) {
+    for (let j = i + 1; j < students.length; j++) {
+      if (hasAvoidConflict(students[i], students[j])) {
+        conflicts++;
+      }
+    }
+  }
+  return conflicts;
 }
 
 function generateCollaborativeArrangement(students: Student[]): Student[] {

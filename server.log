@@ -2,41 +2,17 @@
 > rest-express@1.0.0 dev
 > NODE_ENV=development tsx server/index.ts
 
-4:08:49 PM [express] serving on localhost:3000
-4:08:50 PM [express] GET /api/students 200 in 2ms :: []
+5:16:28 PM [express] serving on localhost:3000
+5:16:30 PM [express] GET /api/students 200 in 4ms :: []
 Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
   npx update-browserslist-db@latest
   Why you should do it regularly: https://github.com/browserslist/update-db#readme
-4:08:52 PM [express] GET /api/students 200 in 1ms :: []
-4:08:52 PM [express] GET /api/seating-charts 304 in 4ms :: []
-4:08:58 PM [express] POST /api/students/upload-csv 200 in 12ms :: {"message":"Successfully imported …
-4:08:58 PM [express] GET /api/students 200 in 1ms :: [{"name":"Alex Chen","primaryLanguage":"English…
-4:12:13 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:12:25 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:12:41 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:13:03 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:13:14 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:13:27 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:13:36 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:13:45 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:13:54 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:13:55 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:14:04 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:14:13 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:14:14 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:14:32 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:15:01 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:15:08 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:15:08 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:16:08 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:16:08 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:16:08 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:16:08 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:16:08 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:18:01 PM [express] DELETE /api/students 200 in 1ms :: {"message":"All students deleted successfull…
-4:18:01 PM [express] GET /api/students 200 in 1ms :: []
-4:18:05 PM [express] POST /api/students/upload-csv 200 in 10ms :: {"message":"Successfully imported …
-4:18:05 PM [express] GET /api/students 200 in 0ms :: [{"name":"Alex Chen","primaryLanguage":"English…
-4:19:18 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:19:18 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
-4:19:18 PM [vite] hmr update /src/components/student-table.tsx, /src/index.css?v=iNSM4y0wLXb34CDZ0X1XZ
+5:16:35 PM [express] GET /api/students 200 in 1ms :: []
+5:16:35 PM [express] GET /api/seating-charts 304 in 1ms :: []
+5:16:48 PM [express] POST /api/students/upload-csv 200 in 22ms :: {"message":"Successfully imported …
+5:16:48 PM [express] GET /api/students 200 in 1ms :: [{"name":"Alex Chen","primaryLanguage":"English…
+5:18:54 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=hhddDfbloil1Iq9sUfPYt
+5:21:47 PM [express] DELETE /api/students 200 in 1ms :: {"message":"All students deleted successfull…
+5:21:47 PM [express] GET /api/students 200 in 0ms :: []
+5:22:42 PM [express] POST /api/students/upload-csv 200 in 4ms :: {"message":"Successfully imported 2…
+5:22:42 PM [express] GET /api/students 200 in 1ms :: [{"name":"Alice Johnson","primaryLanguage":"Eng…

@@ -9,6 +9,7 @@ interface SeatingChartGridProps {
   onChartChange: (chart: {position: number, studentId: string | null, customX?: number, customY?: number}[]) => void;
   onChartChangeComplete?: (chart: {position: number, studentId: string | null, customX?: number, customY?: number}[]) => void;
   privacyMode?: boolean;
+  deskSwapMode?: boolean;
 }
 
 interface SeatPosition {
@@ -24,7 +25,8 @@ export default function SeatingChartGrid({
   currentChart, 
   onChartChange,
   onChartChangeComplete,
-  privacyMode
+  privacyMode,
+  deskSwapMode = false
 }: SeatingChartGridProps) {
   const [draggedStudent, setDraggedStudent] = useState<Student | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<number | null>(null);
@@ -581,7 +583,64 @@ export default function SeatingChartGrid({
     }
   };
 
-  const handleContainerMouseUp = () => {
+  const handleContainerMouseUp = (e: React.MouseEvent) => {
+    // Check for desk swapping when in swap mode
+    if (isDraggingDesk && draggingDeskPosition !== null && deskSwapMode) {
+      const containerRect = e.currentTarget.getBoundingClientRect();
+      const dropX = e.clientX - containerRect.left;
+      const dropY = e.clientY - containerRect.top;
+      
+      // Find if we're dropping onto another desk
+      const targetSeat = seats.find(seat => {
+        if (seat.position === draggingDeskPosition) return false; // Don't swap with self
+        
+        const layoutPos = layoutPositions.find(pos => pos.position === seat.position);
+        const fallbackPos = { x: seat.customX ?? 0, y: seat.customY ?? 0 };
+        const seatPos = layoutPos || fallbackPos;
+        
+        const seatX = seat.customX ?? seatPos.x;
+        const seatY = seat.customY ?? seatPos.y;
+        
+        // Check if drop position is within desk bounds (80x80 pixels)
+        return dropX >= seatX && dropX <= seatX + 80 && 
+               dropY >= seatY && dropY <= seatY + 80;
+      });
+      
+      if (targetSeat) {
+        // Perform the swap
+        const draggedSeat = seats.find(s => s.position === draggingDeskPosition);
+        if (draggedSeat) {
+          const newChart = seats.map(seat => {
+            if (seat.position === draggingDeskPosition) {
+              // Move dragged desk to target position
+              return {
+                ...seat,
+                studentId: targetSeat.studentId,
+                customX: targetSeat.customX,
+                customY: targetSeat.customY
+              };
+            } else if (seat.position === targetSeat.position) {
+              // Move target desk to dragged position
+              return {
+                ...seat,
+                studentId: draggedSeat.studentId,
+                customX: draggedSeat.customX,
+                customY: draggedSeat.customY
+              };
+            }
+            return seat;
+          });
+          
+          onChartChange(newChart);
+          
+          // Show swap confirmation
+          const draggedStudent = getStudentById(draggedSeat.studentId);
+          const targetStudent = getStudentById(targetSeat.studentId);
+          console.log(`Swapped: ${draggedStudent?.name || 'Empty desk'} ↔ ${targetStudent?.name || 'Empty desk'}`);
+        }
+      }
+    }
+    
     // If we were dragging a desk or multiple desks, notify that the operation is complete
     if ((isDraggingDesk || isDraggingMultiple) && onChartChangeComplete) {
       onChartChangeComplete([...seats]);
@@ -651,7 +710,7 @@ export default function SeatingChartGrid({
       transform: layoutPos.rotation ? `rotate(${layoutPos.rotation}deg)` : undefined,
       transformOrigin: 'center',
       transition: (isBeingDragged || isMultiDragging) ? 'none' : 'all 0.3s ease',
-      cursor: student ? 'move' : 'default',
+      cursor: deskSwapMode ? 'grab' : (student ? 'move' : 'default'),
       zIndex: (isBeingDragged || isMultiDragging) ? 30 : 'auto'
     };
 
@@ -665,6 +724,7 @@ export default function SeatingChartGrid({
           className={`
             ${isBeingDragged || isMultiDragging ? 'shadow-lg scale-105' : ''}
             ${isSelected ? 'ring-2 ring-blue-400 ring-offset-2' : ''}
+            ${deskSwapMode ? 'ring-2 ring-orange-400 ring-offset-1' : ''}
           `}
         >
           <StudentSeat
@@ -688,6 +748,7 @@ export default function SeatingChartGrid({
           ${isDragOver ? 'drag-over' : ''}
           ${isBeingDragged || isMultiDragging ? 'shadow-lg scale-105' : ''}
           ${isSelected ? 'ring-2 ring-blue-400 ring-offset-2' : ''}
+          ${deskSwapMode ? 'ring-2 ring-orange-400 ring-offset-1' : ''}
         `}
         onDragOver={(e) => handleDragOver(e, seat.position)}
         onDragLeave={handleDragLeave}
@@ -796,7 +857,14 @@ export default function SeatingChartGrid({
         ) : (
           seats.map((seat) => {
             const layoutPos = layoutPositions.find(pos => pos.position === seat.position);
-            return layoutPos ? renderSeat(seat, layoutPos) : null;
+            // For custom desks that don't have a layout position, create a default one
+            const fallbackPos: SeatPosition = {
+              position: seat.position,
+              x: seat.customX ?? 0,
+              y: seat.customY ?? 0,
+              rotation: 0
+            };
+            return renderSeat(seat, layoutPos || fallbackPos);
           })
         )}
 

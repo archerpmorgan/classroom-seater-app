@@ -10,7 +10,8 @@ import UploadArea from "@/components/upload-area";
 import SeatingChartGrid from "@/components/seating-chart-grid";
 import StudentTable from "@/components/student-table";
 import { generateSeatingChart } from "@/lib/seating-algorithms";
-import { Download, Save, GraduationCap, LayoutGrid, UserCog, Shuffle, Eraser, Printer, Users, Database, Eye, EyeOff, ArrowLeftRight, X, Undo2 } from "lucide-react";
+import { Download, Save, GraduationCap, LayoutGrid, UserCog, Shuffle, Eraser, Printer, Users, Database, Eye, EyeOff, ArrowLeftRight, X, Undo2, Plus, RefreshCw } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Student, SeatingChart as SeatingChartType } from "@shared/schema";
 
 export default function SeatingChart() {
@@ -22,6 +23,7 @@ export default function SeatingChart() {
   const [isSwapModalOpen, setIsSwapModalOpen] = useState(false);
   const [firstStudentId, setFirstStudentId] = useState<string>('');
   const [secondStudentId, setSecondStudentId] = useState<string>('');
+  const [deskSwapMode, setDeskSwapMode] = useState(false);
   
   // Undo system state
   const [chartHistory, setChartHistory] = useState<{position: number, studentId: string | null, customX?: number, customY?: number}[][]>([]);
@@ -161,7 +163,7 @@ export default function SeatingChart() {
     setIsGenerating(true);
     try {
       const totalSeats = getSeatCount(layout, students.length);
-      const chart = generateSeatingChart(students, strategy, totalSeats);
+      const chart = generateSeatingChart(students, strategy, totalSeats, layout);
       setCurrentChart(chart);
       // Save initial chart to history
       saveToHistory(chart);
@@ -205,6 +207,33 @@ export default function SeatingChart() {
 
   const handleClearChart = () => {
     setCurrentChart([]);
+  };
+
+  const handleAddDesk = () => {
+    // Find the next available position
+    const nextPosition = currentChart.length;
+    
+    // Place new desk in bottom right area where it's clearly visible
+    // Room width is typically 900px, so place at around 750px from left
+    // Room height varies, but place it low at around 500px from top
+    const newDesk = {
+      position: nextPosition,
+      studentId: null,
+      customX: 750, // Bottom right area
+      customY: 500  // Bottom right area
+    };
+    
+    // Add the new desk to the current chart
+    const newChart = [...currentChart, newDesk];
+    setCurrentChart(newChart);
+    
+    // Save to history
+    saveToHistory(newChart);
+    
+    toast({
+      title: "Desk Added",
+      description: `Empty desk #${nextPosition + 1} added to bottom right. You can drag it anywhere.`,
+    });
   };
 
   const handleDownloadLayoutImage = async () => {
@@ -459,7 +488,8 @@ export default function SeatingChart() {
                 <p className="text-sm text-muted-foreground">Organize your students effectively</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <TooltipProvider>
+              <div className="flex items-center space-x-4">
               <Button 
                 onClick={handleGenerateChart}
                 disabled={isGenerating || students.length === 0}
@@ -472,28 +502,23 @@ export default function SeatingChart() {
                 )}
                 Generate Chart
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setPrivacyMode(!privacyMode)}
-                data-testid="button-privacy-toggle"
-                className={privacyMode ? "bg-muted" : ""}
-              >
-                {privacyMode ? (
-                  <EyeOff className="w-4 h-4 mr-2" />
-                ) : (
-                  <Eye className="w-4 h-4 mr-2" />
-                )}
-                {privacyMode ? "Privacy On" : "Privacy Off"}
-              </Button>
-              <Button 
-                variant="secondary" 
-                onClick={handleDownloadLayoutImage}
-                disabled={currentChart.length === 0}
-                data-testid="button-download-layout-image"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download Layout as Image
-              </Button>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="secondary" 
+                    size="icon"
+                    onClick={handleDownloadLayoutImage}
+                    disabled={currentChart.length === 0}
+                    data-testid="button-download-layout-image"
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Download Layout as Image</p>
+                </TooltipContent>
+              </Tooltip>
               <Button 
                 variant="outline" 
                 size="icon"
@@ -525,6 +550,7 @@ export default function SeatingChart() {
                 <Undo2 className="w-4 h-4" />
               </Button>
             </div>
+            </TooltipProvider>
           </div>
         </div>
       </header>
@@ -714,39 +740,58 @@ export default function SeatingChart() {
             </Card>
 
             {/* Grouping Strategies */}
-            <Card>
+            <Card className={layout !== 'groups' && layout !== 'pairs' ? 'opacity-75' : ''}>
               <CardContent className="p-6">
                 <h2 className="text-lg font-semibold mb-4 text-card-foreground">
                   <Users className="w-5 h-5 inline mr-2 text-accent" />
                   Grouping Strategy
+                  {layout !== 'groups' && layout !== 'pairs' && (
+                    <span className="ml-2 text-xs font-normal text-muted-foreground">
+                      (Not applicable)
+                    </span>
+                  )}
                 </h2>
                 
-                <div className="space-y-3">
-                  <Select value={strategy} onValueChange={setStrategy}>
-                    <SelectTrigger data-testid="select-grouping-strategy">
-                      <SelectValue placeholder="Select strategy" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mixed-ability">Mixed Ability</SelectItem>
-                      <SelectItem value="skill-clustering">Skill Clustering</SelectItem>
-                      <SelectItem value="language-support">Language Support</SelectItem>
-                      <SelectItem value="collaborative-pairs">Collaborative Pairs</SelectItem>
-                      <SelectItem value="attention-zone">Attention Zone Focus</SelectItem>
-                      <SelectItem value="behavior-management">Behavior Management</SelectItem>
-                      <SelectItem value="random">Random Assignment</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  <div className="bg-muted rounded-md p-3">
-                    <p className="text-xs text-muted-foreground">
-                      <span className="mr-1">📚</span>
-                      {getStrategyDescription(strategy)}
+                {/* Show message when grouping strategy is not relevant */}
+                {layout !== 'groups' && layout !== 'pairs' && (
+                  <div className="bg-muted rounded-md p-4 border-l-4 border-muted-foreground">
+                    <p className="text-sm text-muted-foreground">
+                      <span className="mr-2">ℹ️</span>
+                      Grouping strategies are only relevant for <strong>Group Tables</strong> and <strong>Paired Desks</strong> layouts. 
+                      For other layouts, students will be assigned randomly.
                     </p>
-                    <div className="mt-2 text-xs text-muted-foreground">
-                      <strong>Research basis:</strong> {getStrategyResearch(strategy)}
+                  </div>
+                )}
+                
+                {/* Show grouping strategy options only for relevant layouts */}
+                {(layout === 'groups' || layout === 'pairs') && (
+                  <div className="space-y-3">
+                    <Select value={strategy} onValueChange={setStrategy}>
+                      <SelectTrigger data-testid="select-grouping-strategy">
+                        <SelectValue placeholder="Select strategy" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="mixed-ability">Mixed Ability</SelectItem>
+                        <SelectItem value="skill-clustering">Skill Clustering</SelectItem>
+                        <SelectItem value="language-support">Language Support</SelectItem>
+                        <SelectItem value="collaborative-pairs">Collaborative Pairs</SelectItem>
+                        <SelectItem value="attention-zone">Attention Zone Focus</SelectItem>
+                        <SelectItem value="behavior-management">Behavior Management</SelectItem>
+                        <SelectItem value="random">Random Assignment</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <div className="bg-muted rounded-md p-3">
+                      <p className="text-xs text-muted-foreground">
+                        <span className="mr-1">📚</span>
+                        {getStrategyDescription(strategy)}
+                      </p>
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        <strong>Research basis:</strong> {getStrategyResearch(strategy)}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
                 
                 <Button 
                   className="w-full mt-4" 
@@ -759,7 +804,7 @@ export default function SeatingChart() {
                   ) : (
                     <Shuffle className="w-4 h-4 mr-2" />
                   )}
-                  Generate Chart
+                  {layout !== 'groups' && layout !== 'pairs' ? 'Generate Random Chart' : 'Generate Chart'}
                 </Button>
               </CardContent>
             </Card>
@@ -778,6 +823,15 @@ export default function SeatingChart() {
                   >
                     <Shuffle className="w-4 h-4 mr-2 text-muted-foreground" />
                     Shuffle All Students
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-sm" 
+                    onClick={handleAddDesk}
+                    data-testid="button-add-desk"
+                  >
+                    <Plus className="w-4 h-4 mr-2 text-muted-foreground" />
+                    Add Empty Desk
                   </Button>
                   <Button 
                     variant="ghost" 
@@ -809,16 +863,66 @@ export default function SeatingChart() {
             <Card>
               <CardContent className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold text-card-foreground">
-                    <LayoutGrid className="w-6 h-6 inline mr-2 text-primary" />
-                    Seating Chart
+                  <div className="flex items-center space-x-3">
+                    <h2 className="text-xl font-semibold text-card-foreground">
+                      <LayoutGrid className="w-6 h-6 inline mr-2 text-primary" />
+                      Seating Chart
+                    </h2>
+                    
+                    {/* Privacy Mode Toggle */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => setPrivacyMode(!privacyMode)}
+                          data-testid="button-privacy-toggle"
+                          className={privacyMode ? "bg-muted" : ""}
+                        >
+                          {privacyMode ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{privacyMode ? "Turn Privacy Mode Off" : "Turn Privacy Mode On"}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    
+                    {/* Desk Swap Mode Toggle */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => setDeskSwapMode(!deskSwapMode)}
+                          data-testid="button-desk-swap-toggle"
+                          className={deskSwapMode ? "bg-muted" : ""}
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{deskSwapMode ? "Turn Desk Swap Mode Off" : "Turn Desk Swap Mode On"}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    
                     {privacyMode && (
-                      <Badge variant="outline" className="ml-2 text-xs">
+                      <Badge variant="outline" className="text-xs">
                         <EyeOff className="w-3 h-3 mr-1" />
                         Privacy Mode
                       </Badge>
                     )}
-                  </h2>
+                    
+                    {deskSwapMode && (
+                      <Badge variant="outline" className="text-xs">
+                        <RefreshCw className="w-3 h-3 mr-1" />
+                        Swap Mode
+                      </Badge>
+                    )}
+                  </div>
                   <div className="flex items-center space-x-3">
                     <span className="text-sm text-muted-foreground">Layout:</span>
                     <span className="text-sm font-medium text-foreground" data-testid="text-current-layout">
@@ -829,23 +933,26 @@ export default function SeatingChart() {
                 
                 {/* Teacher's Desk Indicator */}
                 
-                <SeatingChartGrid 
-                  layout={layout}
-                  students={students}
-                  currentChart={currentChart}
-                  onChartChange={(newChart) => {
-                    setCurrentChart(newChart);
-                    // Don't save to history during drag operations
-                    // Only save when operations are complete
-                  }}
-                  onChartChangeComplete={(newChart) => {
-                    // This is called when a drag operation is complete
-                    if (!isRestoringFromHistory) {
-                      saveToHistory(newChart);
-                    }
-                  }}
-                  privacyMode={privacyMode}
-                />
+                <TooltipProvider>
+                  <SeatingChartGrid 
+                    layout={layout}
+                    students={students}
+                    currentChart={currentChart}
+                    onChartChange={(newChart) => {
+                      setCurrentChart(newChart);
+                      // Don't save to history during drag operations
+                      // Only save when operations are complete
+                    }}
+                    onChartChangeComplete={(newChart) => {
+                      // This is called when a drag operation is complete
+                      if (!isRestoringFromHistory) {
+                        saveToHistory(newChart);
+                      }
+                    }}
+                    privacyMode={privacyMode}
+                    deskSwapMode={deskSwapMode}
+                  />
+                </TooltipProvider>
                 
                 {/* Legend */}
                 {!privacyMode && (
