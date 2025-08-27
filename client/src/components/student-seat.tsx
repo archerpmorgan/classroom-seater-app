@@ -30,9 +30,8 @@ export default function StudentSeat({
     return student.name.split(' ')[0];
   };
 
-  const getLanguagesDisplay = () => {
-    const languages = [student.primaryLanguage, ...(student.secondaryLanguages || [])];
-    return languages.slice(0, 2).join('/');
+  const getPrimaryLanguageDisplay = () => {
+    return student.primaryLanguage;
   };
 
   const handleDragStart = (e: React.DragEvent) => {
@@ -56,13 +55,13 @@ export default function StudentSeat({
       onDragEnd={handleDragEnd}
       data-testid={`student-seat-${student.id}`}
       data-student-id={student.id}
-      title={`${student.name} - ${student.skillLevel} - ${getLanguagesDisplay()}`}
+      title={`${student.name} - ${student.skillLevel} - ${getPrimaryLanguageDisplay()}`}
     >
       <div className="text-sm font-bold text-foreground leading-tight" style={{fontSize: '13px'}}>
         {getFirstName()}
       </div>
       <div className="text-xs text-muted-foreground mt-1 leading-tight" style={{fontSize: '10px'}}>
-        {getLanguagesDisplay()}
+        {getPrimaryLanguageDisplay()}
       </div>
       <div className="flex justify-center mt-1">
         <span 
