@@ -538,11 +538,6 @@ export default function SeatingChart() {
                 </div>
                 
                 {/* Teacher's Desk Indicator */}
-                <div className="flex justify-center mb-4">
-                  <div className="bg-secondary text-secondary-foreground px-6 py-3 rounded-lg font-medium">
-                    📚 Teacher's Desk / Board
-                  </div>
-                </div>
                 
                 <SeatingChartGrid 
                   layout={layout}
