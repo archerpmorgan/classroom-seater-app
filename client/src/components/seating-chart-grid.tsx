@@ -31,11 +31,18 @@ export default function SeatingChartGrid({
   const [draggedStudent, setDraggedStudent] = useState<Student | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<number | null>(null);
   const [teacherDeskPosition, setTeacherDeskPosition] = useState({ x: 50, y: 80 });
+  const [teacherDeskSize, setTeacherDeskSize] = useState({ width: 100, height: 80 });
   const [isDraggingTeacherDesk, setIsDraggingTeacherDesk] = useState(false);
+  const [isResizingTeacherDesk, setIsResizingTeacherDesk] = useState(false);
+  const [resizeHandle, setResizeHandle] = useState<string | null>(null);
   const [whiteboardPosition, setWhiteboardPosition] = useState({ x: 350, y: 15 });
+  const [whiteboardSize, setWhiteboardSize] = useState({ width: 200, height: 40 });
   const [isDraggingWhiteboard, setIsDraggingWhiteboard] = useState(false);
+  const [isResizingWhiteboard, setIsResizingWhiteboard] = useState(false);
   const [doorPosition, setDoorPosition] = useState({ x: 780, y: 80 });
+  const [doorSize, setDoorSize] = useState({ width: 45, height: 120 });
   const [isDraggingDoor, setIsDraggingDoor] = useState(false);
+  const [isResizingDoor, setIsResizingDoor] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   
   // New state for draggable desks
@@ -380,8 +387,26 @@ export default function SeatingChartGrid({
   };
 
   const handleTeacherDeskMouseDown = (e: React.MouseEvent) => {
+    // Check if clicking on a resize handle
+    const target = e.target as HTMLElement;
+    if (target.classList.contains('resize-handle')) {
+      const handle = target.getAttribute('data-handle');
+      if (handle) {
+        setIsResizingTeacherDesk(true);
+        setResizeHandle(handle);
+        const containerRect = e.currentTarget.closest('[data-testid="seating-chart-grid"]')?.getBoundingClientRect();
+        if (containerRect) {
+          setDragOffset({
+            x: e.clientX - containerRect.left,
+            y: e.clientY - containerRect.top
+          });
+        }
+        return;
+      }
+    }
+    
+    // Regular drag
     setIsDraggingTeacherDesk(true);
-    const rect = e.currentTarget.getBoundingClientRect();
     const containerRect = e.currentTarget.closest('[data-testid="seating-chart-grid"]')?.getBoundingClientRect();
     if (containerRect) {
       setDragOffset({
@@ -392,23 +417,156 @@ export default function SeatingChartGrid({
   };
 
   const handleContainerMouseMove = (e: React.MouseEvent) => {
-    if (isDraggingTeacherDesk) {
+    if (isResizingTeacherDesk && resizeHandle) {
+      const containerRect = e.currentTarget.getBoundingClientRect();
+      const currentX = e.clientX - containerRect.left;
+      const currentY = e.clientY - containerRect.top;
+      
+      let newWidth = teacherDeskSize.width;
+      let newHeight = teacherDeskSize.height;
+      let newX = teacherDeskPosition.x;
+      let newY = teacherDeskPosition.y;
+      
+      const minSize = 60; // Minimum size
+      const maxWidth = 900 - teacherDeskPosition.x;
+      const maxHeight = 600 - teacherDeskPosition.y;
+      
+      switch (resizeHandle) {
+        case 'se':
+          // Southeast (bottom-right) - resize width and height
+          newWidth = Math.max(minSize, Math.min(maxWidth, currentX - teacherDeskPosition.x));
+          newHeight = Math.max(minSize, Math.min(maxHeight, currentY - teacherDeskPosition.y));
+          break;
+        case 'sw':
+          // Southwest (bottom-left) - resize width and height, adjust x
+          const newWidthSW = Math.max(minSize, Math.min(teacherDeskPosition.x + teacherDeskSize.width, teacherDeskPosition.x + teacherDeskSize.width - currentX));
+          newX = teacherDeskPosition.x + teacherDeskSize.width - newWidthSW;
+          newWidth = newWidthSW;
+          newHeight = Math.max(minSize, Math.min(maxHeight, currentY - teacherDeskPosition.y));
+          break;
+        case 'ne':
+          // Northeast (top-right) - resize width and height, adjust y
+          newWidth = Math.max(minSize, Math.min(maxWidth, currentX - teacherDeskPosition.x));
+          const newHeightNE = Math.max(minSize, Math.min(teacherDeskPosition.y + teacherDeskSize.height, teacherDeskPosition.y + teacherDeskSize.height - currentY));
+          newY = teacherDeskPosition.y + teacherDeskSize.height - newHeightNE;
+          newHeight = newHeightNE;
+          break;
+        case 'nw':
+          // Northwest (top-left) - resize width and height, adjust x and y
+          const newWidthNW = Math.max(minSize, Math.min(teacherDeskPosition.x + teacherDeskSize.width, teacherDeskPosition.x + teacherDeskSize.width - currentX));
+          newX = teacherDeskPosition.x + teacherDeskSize.width - newWidthNW;
+          newWidth = newWidthNW;
+          const newHeightNW = Math.max(minSize, Math.min(teacherDeskPosition.y + teacherDeskSize.height, teacherDeskPosition.y + teacherDeskSize.height - currentY));
+          newY = teacherDeskPosition.y + teacherDeskSize.height - newHeightNW;
+          newHeight = newHeightNW;
+          break;
+      }
+      
+      setTeacherDeskSize({ width: newWidth, height: newHeight });
+      setTeacherDeskPosition({ x: newX, y: newY });
+    } else if (isDraggingTeacherDesk) {
       const containerRect = e.currentTarget.getBoundingClientRect();
       setTeacherDeskPosition({
-        x: Math.max(0, Math.min(900 - 100, e.clientX - containerRect.left - dragOffset.x)),
-        y: Math.max(0, Math.min(600 - 80, e.clientY - containerRect.top - dragOffset.y))
+        x: Math.max(0, Math.min(900 - teacherDeskSize.width, e.clientX - containerRect.left - dragOffset.x)),
+        y: Math.max(0, Math.min(600 - teacherDeskSize.height, e.clientY - containerRect.top - dragOffset.y))
       });
+    } else if (isResizingWhiteboard && resizeHandle) {
+      const containerRect = e.currentTarget.getBoundingClientRect();
+      const currentX = e.clientX - containerRect.left;
+      const currentY = e.clientY - containerRect.top;
+      
+      let newWidth = whiteboardSize.width;
+      let newHeight = whiteboardSize.height;
+      let newX = whiteboardPosition.x;
+      let newY = whiteboardPosition.y;
+      
+      const minSize = 40; // Minimum size for whiteboard
+      const maxWidth = 900 - whiteboardPosition.x;
+      const maxHeight = 600 - whiteboardPosition.y;
+      
+      switch (resizeHandle) {
+        case 'se':
+          newWidth = Math.max(minSize, Math.min(maxWidth, currentX - whiteboardPosition.x));
+          newHeight = Math.max(minSize, Math.min(maxHeight, currentY - whiteboardPosition.y));
+          break;
+        case 'sw':
+          const newWidthSW = Math.max(minSize, Math.min(whiteboardPosition.x + whiteboardSize.width, whiteboardPosition.x + whiteboardSize.width - currentX));
+          newX = whiteboardPosition.x + whiteboardSize.width - newWidthSW;
+          newWidth = newWidthSW;
+          newHeight = Math.max(minSize, Math.min(maxHeight, currentY - whiteboardPosition.y));
+          break;
+        case 'ne':
+          newWidth = Math.max(minSize, Math.min(maxWidth, currentX - whiteboardPosition.x));
+          const newHeightNE = Math.max(minSize, Math.min(whiteboardPosition.y + whiteboardSize.height, whiteboardPosition.y + whiteboardSize.height - currentY));
+          newY = whiteboardPosition.y + whiteboardSize.height - newHeightNE;
+          newHeight = newHeightNE;
+          break;
+        case 'nw':
+          const newWidthNW = Math.max(minSize, Math.min(whiteboardPosition.x + whiteboardSize.width, whiteboardPosition.x + whiteboardSize.width - currentX));
+          newX = whiteboardPosition.x + whiteboardSize.width - newWidthNW;
+          newWidth = newWidthNW;
+          const newHeightNW = Math.max(minSize, Math.min(whiteboardPosition.y + whiteboardSize.height, whiteboardPosition.y + whiteboardSize.height - currentY));
+          newY = whiteboardPosition.y + whiteboardSize.height - newHeightNW;
+          newHeight = newHeightNW;
+          break;
+      }
+      
+      setWhiteboardSize({ width: newWidth, height: newHeight });
+      setWhiteboardPosition({ x: newX, y: newY });
     } else if (isDraggingWhiteboard) {
       const containerRect = e.currentTarget.getBoundingClientRect();
       setWhiteboardPosition({
-        x: Math.max(0, Math.min(900 - 200, e.clientX - containerRect.left - dragOffset.x)),
-        y: Math.max(0, Math.min(600 - 40, e.clientY - containerRect.top - dragOffset.y))
+        x: Math.max(0, Math.min(900 - whiteboardSize.width, e.clientX - containerRect.left - dragOffset.x)),
+        y: Math.max(0, Math.min(600 - whiteboardSize.height, e.clientY - containerRect.top - dragOffset.y))
       });
+    } else if (isResizingDoor && resizeHandle) {
+      const containerRect = e.currentTarget.getBoundingClientRect();
+      const currentX = e.clientX - containerRect.left;
+      const currentY = e.clientY - containerRect.top;
+      
+      let newWidth = doorSize.width;
+      let newHeight = doorSize.height;
+      let newX = doorPosition.x;
+      let newY = doorPosition.y;
+      
+      const minSize = 30; // Minimum size for door
+      const maxWidth = 900 - doorPosition.x;
+      const maxHeight = 600 - doorPosition.y;
+      
+      switch (resizeHandle) {
+        case 'se':
+          newWidth = Math.max(minSize, Math.min(maxWidth, currentX - doorPosition.x));
+          newHeight = Math.max(minSize, Math.min(maxHeight, currentY - doorPosition.y));
+          break;
+        case 'sw':
+          const newWidthSW = Math.max(minSize, Math.min(doorPosition.x + doorSize.width, doorPosition.x + doorSize.width - currentX));
+          newX = doorPosition.x + doorSize.width - newWidthSW;
+          newWidth = newWidthSW;
+          newHeight = Math.max(minSize, Math.min(maxHeight, currentY - doorPosition.y));
+          break;
+        case 'ne':
+          newWidth = Math.max(minSize, Math.min(maxWidth, currentX - doorPosition.x));
+          const newHeightNE = Math.max(minSize, Math.min(doorPosition.y + doorSize.height, doorPosition.y + doorSize.height - currentY));
+          newY = doorPosition.y + doorSize.height - newHeightNE;
+          newHeight = newHeightNE;
+          break;
+        case 'nw':
+          const newWidthNW = Math.max(minSize, Math.min(doorPosition.x + doorSize.width, doorPosition.x + doorSize.width - currentX));
+          newX = doorPosition.x + doorSize.width - newWidthNW;
+          newWidth = newWidthNW;
+          const newHeightNW = Math.max(minSize, Math.min(doorPosition.y + doorSize.height, doorPosition.y + doorSize.height - currentY));
+          newY = doorPosition.y + doorSize.height - newHeightNW;
+          newHeight = newHeightNW;
+          break;
+      }
+      
+      setDoorSize({ width: newWidth, height: newHeight });
+      setDoorPosition({ x: newX, y: newY });
     } else if (isDraggingDoor) {
       const containerRect = e.currentTarget.getBoundingClientRect();
       setDoorPosition({
-        x: Math.max(0, Math.min(900 - 45, e.clientX - containerRect.left - dragOffset.x)),
-        y: Math.max(0, Math.min(600 - 120, e.clientY - containerRect.top - dragOffset.y))
+        x: Math.max(0, Math.min(900 - doorSize.width, e.clientX - containerRect.left - dragOffset.x)),
+        y: Math.max(0, Math.min(600 - doorSize.height, e.clientY - containerRect.top - dragOffset.y))
       });
     } else if (isDraggingDesk && draggingDeskPosition !== null) {
       const containerRect = e.currentTarget.getBoundingClientRect();
@@ -492,6 +650,25 @@ export default function SeatingChartGrid({
   };
 
   const handleWhiteboardMouseDown = (e: React.MouseEvent) => {
+    // Check if clicking on a resize handle
+    const target = e.target as HTMLElement;
+    if (target.classList.contains('resize-handle')) {
+      const handle = target.getAttribute('data-handle');
+      if (handle) {
+        setIsResizingWhiteboard(true);
+        setResizeHandle(handle);
+        const containerRect = e.currentTarget.closest('[data-testid="seating-chart-grid"]')?.getBoundingClientRect();
+        if (containerRect) {
+          setDragOffset({
+            x: e.clientX - containerRect.left,
+            y: e.clientY - containerRect.top
+          });
+        }
+        return;
+      }
+    }
+    
+    // Regular drag
     setIsDraggingWhiteboard(true);
     const containerRect = e.currentTarget.closest('[data-testid="seating-chart-grid"]')?.getBoundingClientRect();
     if (containerRect) {
@@ -503,6 +680,25 @@ export default function SeatingChartGrid({
   };
 
   const handleDoorMouseDown = (e: React.MouseEvent) => {
+    // Check if clicking on a resize handle
+    const target = e.target as HTMLElement;
+    if (target.classList.contains('resize-handle')) {
+      const handle = target.getAttribute('data-handle');
+      if (handle) {
+        setIsResizingDoor(true);
+        setResizeHandle(handle);
+        const containerRect = e.currentTarget.closest('[data-testid="seating-chart-grid"]')?.getBoundingClientRect();
+        if (containerRect) {
+          setDragOffset({
+            x: e.clientX - containerRect.left,
+            y: e.clientY - containerRect.top
+          });
+        }
+        return;
+      }
+    }
+    
+    // Regular drag
     setIsDraggingDoor(true);
     const containerRect = e.currentTarget.closest('[data-testid="seating-chart-grid"]')?.getBoundingClientRect();
     if (containerRect) {
@@ -647,8 +843,12 @@ export default function SeatingChartGrid({
     }
     
     setIsDraggingTeacherDesk(false);
+    setIsResizingTeacherDesk(false);
     setIsDraggingWhiteboard(false);
+    setIsResizingWhiteboard(false);
     setIsDraggingDoor(false);
+    setIsResizingDoor(false);
+    setResizeHandle(null);
     setIsDraggingDesk(false);
     setDraggingDeskPosition(null);
     setIsBoxSelecting(false);
@@ -784,15 +984,15 @@ export default function SeatingChartGrid({
         {/* Draggable Whiteboard */}
         <div 
           className={`absolute bg-slate-200 dark:bg-slate-700 border-2 border-slate-400 dark:border-slate-500 rounded-md shadow-lg cursor-move select-none ${
-            isDraggingWhiteboard ? 'shadow-xl scale-105' : ''
+            isDraggingWhiteboard || isResizingWhiteboard ? 'shadow-xl scale-105' : ''
           }`}
           style={{ 
             left: `${whiteboardPosition.x}px`, 
             top: `${whiteboardPosition.y}px`, 
-            width: '200px', 
-            height: '40px',
+            width: `${whiteboardSize.width}px`, 
+            height: `${whiteboardSize.height}px`,
             zIndex: 15,
-            transition: isDraggingWhiteboard ? 'none' : 'transform 0.2s ease'
+            transition: (isDraggingWhiteboard || isResizingWhiteboard) ? 'none' : 'transform 0.2s ease'
           }}
           data-testid="whiteboard"
           onMouseDown={handleWhiteboardMouseDown}
@@ -800,20 +1000,42 @@ export default function SeatingChartGrid({
           <div className="flex items-center justify-center h-full text-slate-600 dark:text-slate-300">
             <div className="text-sm font-medium">📋 Whiteboard</div>
           </div>
+          
+          {/* Resize Handles */}
+          <div 
+            className="resize-handle absolute top-0 left-0 w-3 h-3 cursor-nw-resize bg-slate-200 dark:bg-slate-700 hover:bg-slate-400 rounded-tl transition-colors"
+            data-handle="nw"
+            style={{ zIndex: 16 }}
+          />
+          <div 
+            className="resize-handle absolute top-0 right-0 w-3 h-3 cursor-ne-resize bg-slate-200 dark:bg-slate-700 hover:bg-slate-400 rounded-tr transition-colors"
+            data-handle="ne"
+            style={{ zIndex: 16 }}
+          />
+          <div 
+            className="resize-handle absolute bottom-0 left-0 w-3 h-3 cursor-sw-resize bg-slate-200 dark:bg-slate-700 hover:bg-slate-400 rounded-bl transition-colors"
+            data-handle="sw"
+            style={{ zIndex: 16 }}
+          />
+          <div 
+            className="resize-handle absolute bottom-0 right-0 w-3 h-3 cursor-se-resize bg-slate-200 dark:bg-slate-700 hover:bg-slate-400 rounded-br transition-colors"
+            data-handle="se"
+            style={{ zIndex: 16 }}
+          />
         </div>
 
         {/* Draggable Teacher Desk */}
         <div 
           className={`absolute bg-amber-100 dark:bg-amber-900/30 border-2 border-amber-300 dark:border-amber-600 rounded-lg shadow-md cursor-move select-none ${
-            isDraggingTeacherDesk ? 'shadow-lg scale-105' : ''
+            isDraggingTeacherDesk || isResizingTeacherDesk ? 'shadow-lg scale-105' : ''
           }`}
           style={{ 
             left: `${teacherDeskPosition.x}px`, 
             top: `${teacherDeskPosition.y}px`, 
-            width: '100px', 
-            height: '80px',
+            width: `${teacherDeskSize.width}px`, 
+            height: `${teacherDeskSize.height}px`,
             zIndex: 20,
-            transition: isDraggingTeacherDesk ? 'none' : 'transform 0.2s ease'
+            transition: (isDraggingTeacherDesk || isResizingTeacherDesk) ? 'none' : 'transform 0.2s ease'
           }}
           data-testid="teacher-desk"
           onMouseDown={handleTeacherDeskMouseDown}
@@ -822,20 +1044,42 @@ export default function SeatingChartGrid({
             <div className="text-lg">🪑</div>
             <div className="text-xs font-medium">Teacher</div>
           </div>
+          
+          {/* Resize Handles */}
+          <div 
+            className="resize-handle absolute top-0 left-0 w-3 h-3 cursor-nw-resize bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-400 rounded-tl transition-colors"
+            data-handle="nw"
+            style={{ zIndex: 21 }}
+          />
+          <div 
+            className="resize-handle absolute top-0 right-0 w-3 h-3 cursor-ne-resize bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-400 rounded-tr transition-colors"
+            data-handle="ne"
+            style={{ zIndex: 21 }}
+          />
+          <div 
+            className="resize-handle absolute bottom-0 left-0 w-3 h-3 cursor-sw-resize bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-400 rounded-bl transition-colors"
+            data-handle="sw"
+            style={{ zIndex: 21 }}
+          />
+          <div 
+            className="resize-handle absolute bottom-0 right-0 w-3 h-3 cursor-se-resize bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-400 rounded-br transition-colors"
+            data-handle="se"
+            style={{ zIndex: 21 }}
+          />
         </div>
 
         {/* Draggable Door */}
         <div 
           className={`absolute bg-green-100 dark:bg-green-900/30 border-2 border-green-300 dark:border-green-600 rounded-lg shadow-md cursor-move select-none ${
-            isDraggingDoor ? 'shadow-lg scale-105' : ''
+            isDraggingDoor || isResizingDoor ? 'shadow-lg scale-105' : ''
           }`}
           style={{ 
             left: `${doorPosition.x}px`, 
             top: `${doorPosition.y}px`, 
-            width: '45px', 
-            height: '120px',
+            width: `${doorSize.width}px`, 
+            height: `${doorSize.height}px`,
             zIndex: 20,
-            transition: isDraggingDoor ? 'none' : 'transform 0.2s ease'
+            transition: (isDraggingDoor || isResizingDoor) ? 'none' : 'transform 0.2s ease'
           }}
           data-testid="door"
           onMouseDown={handleDoorMouseDown}
@@ -844,6 +1088,28 @@ export default function SeatingChartGrid({
             <div className="text-3xl mb-1">🚪</div>
             <div className="text-[10px] font-medium text-center leading-tight">Door</div>
           </div>
+          
+          {/* Resize Handles */}
+          <div 
+            className="resize-handle absolute top-0 left-0 w-3 h-3 cursor-nw-resize bg-green-100 dark:bg-green-900/30 hover:bg-green-400 rounded-tl transition-colors"
+            data-handle="nw"
+            style={{ zIndex: 21 }}
+          />
+          <div 
+            className="resize-handle absolute top-0 right-0 w-3 h-3 cursor-ne-resize bg-green-100 dark:bg-green-900/30 hover:bg-green-400 rounded-tr transition-colors"
+            data-handle="ne"
+            style={{ zIndex: 21 }}
+          />
+          <div 
+            className="resize-handle absolute bottom-0 left-0 w-3 h-3 cursor-sw-resize bg-green-100 dark:bg-green-900/30 hover:bg-green-400 rounded-bl transition-colors"
+            data-handle="sw"
+            style={{ zIndex: 21 }}
+          />
+          <div 
+            className="resize-handle absolute bottom-0 right-0 w-3 h-3 cursor-se-resize bg-green-100 dark:bg-green-900/30 hover:bg-green-400 rounded-br transition-colors"
+            data-handle="se"
+            style={{ zIndex: 21 }}
+          />
         </div>
 
         {seats.length === 0 ? (
