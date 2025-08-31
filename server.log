@@ -2,28 +2,36 @@
 > rest-express@1.0.0 dev
 > NODE_ENV=development tsx server/index.ts
 
-7:54:44 PM [express] serving on localhost:3000
-7:54:46 PM [express] GET /api/students 200 in 2ms :: []
+[dotenv@17.2.1] injecting env (2) from .env -- tip: 📡 auto-backup env with Radar: https://dotenvx.com/radar
+11:49:58 AM [express] serving on localhost:3000
+11:50:00 AM [express] GET /api/students 200 in 4ms :: []
 Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
   npx update-browserslist-db@latest
   Why you should do it regularly: https://github.com/browserslist/update-db#readme
-7:54:47 PM [express] GET /api/seating-charts 304 in 1ms :: []
-7:54:47 PM [express] GET /api/students 304 in 1ms :: []
-7:55:26 PM [express] GET /api/students 304 in 0ms :: []
-7:55:26 PM [express] GET /api/seating-charts 304 in 1ms :: []
-7:55:38 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=KviEfJov2b9hOlGXPph-d
-7:55:47 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=KviEfJov2b9hOlGXPph-d
-7:58:07 PM [express] GET /api/seating-charts 304 in 1ms :: []
-7:58:07 PM [express] GET /api/students 304 in 1ms :: []
-7:58:37 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=KviEfJov2b9hOlGXPph-d
-7:58:55 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=KviEfJov2b9hOlGXPph-d
-7:59:20 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=KviEfJov2b9hOlGXPph-d
-7:59:35 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=KviEfJov2b9hOlGXPph-d
-8:00:00 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=KviEfJov2b9hOlGXPph-d
-8:00:10 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=KviEfJov2b9hOlGXPph-d
-8:00:46 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=KviEfJov2b9hOlGXPph-d
-8:01:06 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=KviEfJov2b9hOlGXPph-d
-8:01:21 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=KviEfJov2b9hOlGXPph-d
-8:02:25 PM [express] POST /api/students/upload-csv 200 in 22ms :: {"message":"Successfully imported …
-8:02:25 PM [express] GET /api/students 200 in 0ms :: [{"name":"Alice Johnson","primaryLanguage":"Eng…
-8:02:44 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=KviEfJov2b9hOlGXPph-d
+11:50:05 AM [express] GET /api/students 200 in 1ms :: []
+11:50:05 AM [express] GET /api/seating-charts 304 in 1ms :: []
+[Routes] Google Drive verification endpoint called
+[Routes] Checking environment variables...
+[Routes] GOOGLE_SERVICE_ACCOUNT_EMAIL: SET
+[Routes] GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY: SET (length: 1703)
+[Routes] Environment variables configured, testing access...
+[GoogleDrive] Initializing Google Drive service...
+[GoogleDrive] Service account email: SET
+[GoogleDrive] Private key: SET (length: 1703)
+[GoogleDrive] Google Drive service initialized
+[GoogleDrive] Verifying access to Google Drive...
+[GoogleDrive] Auth email: lassroom-seater-drive-access@gen-lang-client-0624712071.iam.gserviceaccount.com
+[GoogleDrive] Auth scopes: [ 'https://www.googleapis.com/auth/drive.readonly' ]
+[GoogleDrive] Access verification successful
+[GoogleDrive] Response: {
+  "files": [
+    {
+      "id": "1nUQ-W-f9c90Rs3xwMCU1Yi12jhh2bpAO"
+    }
+  ]
+}
+[Routes] Access verification result: true
+11:50:16 AM [express] GET /api/google-drive/verify 304 in 3176ms :: {"configured":true,"hasAccess":tr…
+11:50:23 AM [express] GET /api/google-drive/files/1nUQ-W-f9c90Rs3xwMCU1Yi12jhh2bpAO 304 in 470ms :: […
+11:50:35 AM [express] POST /api/students/import-from-drive 200 in 1213ms :: {"message":"Successfully …
+11:50:35 AM [express] GET /api/students 200 in 0ms :: [{"name":"Alex Chen","primaryLanguage":"English…

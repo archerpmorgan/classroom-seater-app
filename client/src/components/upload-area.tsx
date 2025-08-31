@@ -1,9 +1,11 @@
 import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Download } from "lucide-react";
+import { FileUp, Download, Cloud } from "lucide-react";
 import { getApiUrl } from "@/lib/config";
+import GoogleDriveImport from "./google-drive-import";
 
 export default function UploadArea() {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -54,10 +56,13 @@ export default function UploadArea() {
   });
 
   const handleFileSelect = (file: File) => {
-    if (!file.name.toLowerCase().endsWith('.csv')) {
+    const fileName = file.name.toLowerCase();
+    const isValidFile = fileName.endsWith('.csv') || fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+    
+    if (!isValidFile) {
       toast({
         title: "Invalid File Type",
-        description: "Please upload a CSV file",
+        description: "Please upload a CSV or Excel file (.csv, .xlsx, .xls)",
         variant: "destructive",
       });
       return;
@@ -159,50 +164,61 @@ export default function UploadArea() {
   };
 
   return (
-    <div>
-      <div 
-        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
-          isDragOver 
-            ? 'border-primary bg-primary/5' 
-            : 'border-border hover:border-primary'
-        }`}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onClick={handleBrowseClick}
-        data-testid="upload-area"
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".csv"
-          onChange={handleFileInputChange}
-          className="hidden"
-          data-testid="file-input"
-        />
-        
-        <FileUp className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-        
-        {uploadMutation.isPending ? (
-          <div>
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Uploading...</p>
-          </div>
-        ) : (
-          <div>
-            <p className="text-sm text-muted-foreground">
-              Drop your CSV file here or{' '}
-              <span className="text-primary underline">browse</span>
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Supports: .csv files
-            </p>
-          </div>
-        )}
-      </div>
+    <Tabs defaultValue="upload" className="w-full">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="upload" className="flex items-center gap-2">
+          <FileUp className="w-4 h-4" />
+          Upload File
+        </TabsTrigger>
+        <TabsTrigger value="drive" className="flex items-center gap-2">
+          <Cloud className="w-4 h-4" />
+          Google Drive
+        </TabsTrigger>
+      </TabsList>
       
-      {/* CSV Template Download */}
-      <div className="mt-4">
+      <TabsContent value="upload" className="space-y-4">
+        <div 
+          className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+            isDragOver 
+              ? 'border-primary bg-primary/5' 
+              : 'border-border hover:border-primary'
+          }`}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onClick={handleBrowseClick}
+          data-testid="upload-area"
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.xlsx,.xls"
+            onChange={handleFileInputChange}
+            className="hidden"
+            data-testid="file-input"
+          />
+          
+          <FileUp className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+          
+          {uploadMutation.isPending ? (
+            <div>
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Uploading...</p>
+            </div>
+          ) : (
+            <div>
+              <p className="text-sm text-muted-foreground">
+                Drop your CSV or Excel file here or{' '}
+                <span className="text-primary underline">browse</span>
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Supports: .csv, .xlsx, .xls files
+              </p>
+            </div>
+          )}
+        </div>
+        
+        {/* CSV Template Download */}
         <Button 
           variant="outline" 
           size="sm" 
@@ -213,7 +229,11 @@ export default function UploadArea() {
           <Download className="w-4 h-4 mr-2" />
           Download CSV Template
         </Button>
-      </div>
-    </div>
+      </TabsContent>
+      
+      <TabsContent value="drive">
+        <GoogleDriveImport />
+      </TabsContent>
+    </Tabs>
   );
 }
