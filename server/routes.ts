@@ -286,7 +286,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY) {
         return res.status(500).json({ 
-          message: "Google Drive integration not configured. Please set up service account credentials." 
+          error: "Google Drive integration not configured. Please check your environment variables." 
         });
       }
 
@@ -294,32 +294,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const files = await googleDriveService.listSpreadsheetFiles(folderId);
       res.json(files);
     } catch (error) {
-      console.error('Error listing Google Drive files:', error);
-      res.status(500).json({ message: "Failed to list Google Drive files" });
+      console.error("Error listing Google Drive files:", error);
+      res.status(500).json({ 
+        error: error instanceof Error ? error.message : "Failed to list Google Drive files" 
+      });
+    }
+  });
+
+  // New endpoint to get sheets from a Google Sheets document
+  app.get("/api/google-drive/sheets/:spreadsheetId", async (req, res) => {
+    try {
+      const { spreadsheetId } = req.params;
+      console.log(`[Sheets] Getting sheets for spreadsheet ID: ${spreadsheetId}`);
+      
+      if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY) {
+        console.error("[Sheets] Google Drive integration not configured");
+        return res.status(500).json({ 
+          error: "Google Drive integration not configured. Please check your environment variables." 
+        });
+      }
+
+      const { googleDriveService } = await import("./google-drive");
+      console.log("[Sheets] Calling getSheetsList...");
+      const sheets = await googleDriveService.getSheetsList(spreadsheetId);
+      console.log(`[Sheets] Found ${sheets.length} sheets:`, sheets.map(s => s.title));
+      res.json(sheets);
+    } catch (error) {
+      console.error("Error listing Google Sheets:", error);
+      if (error instanceof Error) {
+        console.error("Error details:", error.stack);
+      }
+      res.status(500).json({ 
+        error: error instanceof Error ? error.message : "Failed to list Google Sheets" 
+      });
     }
   });
 
   app.post("/api/students/import-from-drive", async (req, res) => {
     try {
-      const { fileId } = req.body;
+      const { fileId, sheetName } = req.body;
       
-      if (!fileId) {
-        return res.status(400).json({ message: "File ID is required" });
-      }
-
       if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY) {
         return res.status(500).json({ 
-          message: "Google Drive integration not configured. Please set up service account credentials." 
+          error: "Google Drive integration not configured. Please check your environment variables." 
         });
       }
 
-      // Download file content from Google Drive
+      if (!fileId) {
+        return res.status(400).json({ error: "File ID is required" });
+      }
+
+      console.log(`[Import] Starting import from Google Drive file: ${fileId}${sheetName ? `, sheet: ${sheetName}` : ''}`);
+
+      // Get file metadata first
       const { googleDriveService } = await import("./google-drive");
-      const fileBuffer = await googleDriveService.downloadFileContent(fileId);
       const fileMetadata = await googleDriveService.getFileMetadata(fileId);
-      
-      // Parse the file (CSV or Excel)
-      const { headers, rows } = parseSpreadsheetFile(fileBuffer, fileMetadata.name, fileMetadata.mimeType);
+      console.log(`[Import] File metadata:`, fileMetadata);
+
+      let buffer: Buffer;
+      let fileName = fileMetadata.name;
+
+      // Check if this is a Google Sheets document and we have a sheet name
+      if (sheetName && fileMetadata.mimeType === 'application/vnd.google-apps.spreadsheet') {
+        console.log(`[Import] Downloading sheet "${sheetName}" from Google Sheets document`);
+        buffer = await googleDriveService.downloadSheetContent(fileId, sheetName);
+        fileName = `${fileMetadata.name} - ${sheetName}.csv`;
+      } else {
+        console.log(`[Import] Downloading file content from Google Drive`);
+        buffer = await googleDriveService.downloadFileContent(fileId);
+      }
+
+      console.log(`[Import] Downloaded ${buffer.length} bytes`);
+
+      // Parse the spreadsheet data
+      const { headers, rows } = parseSpreadsheetFile(buffer, fileName, fileMetadata.mimeType);
+      console.log(`[Import] Parsed ${rows.length} rows with headers:`, headers);
       
       // Map CSV headers to schema fields with flexible matching
       const headerMap: Record<string, string> = {

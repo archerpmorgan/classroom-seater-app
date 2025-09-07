@@ -2,14 +2,14 @@
 > rest-express@1.0.0 dev
 > NODE_ENV=development tsx server/index.ts
 
-[dotenv@17.2.1] injecting env (2) from .env -- tip: 📡 auto-backup env with Radar: https://dotenvx.com/radar
-11:49:58 AM [express] serving on localhost:3000
-11:50:00 AM [express] GET /api/students 200 in 4ms :: []
-Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
+[dotenv@17.2.1] injecting env (2) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+9:11:50 PM [express] serving on localhost:3000
+9:11:51 PM [express] GET /api/students 200 in 4ms :: []
+Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
   npx update-browserslist-db@latest
   Why you should do it regularly: https://github.com/browserslist/update-db#readme
-11:50:05 AM [express] GET /api/students 200 in 1ms :: []
-11:50:05 AM [express] GET /api/seating-charts 304 in 1ms :: []
+9:11:54 PM [express] GET /api/students 304 in 0ms :: []
+9:11:54 PM [express] GET /api/seating-charts 304 in 0ms :: []
 [Routes] Google Drive verification endpoint called
 [Routes] Checking environment variables...
 [Routes] GOOGLE_SERVICE_ACCOUNT_EMAIL: SET
@@ -18,20 +18,269 @@ Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
 [GoogleDrive] Initializing Google Drive service...
 [GoogleDrive] Service account email: SET
 [GoogleDrive] Private key: SET (length: 1703)
-[GoogleDrive] Google Drive service initialized
+[GoogleDrive] Google Drive and Sheets services initialized
 [GoogleDrive] Verifying access to Google Drive...
 [GoogleDrive] Auth email: lassroom-seater-drive-access@gen-lang-client-0624712071.iam.gserviceaccount.com
-[GoogleDrive] Auth scopes: [ 'https://www.googleapis.com/auth/drive.readonly' ]
+[GoogleDrive] Auth scopes: [
+  'https://www.googleapis.com/auth/drive.readonly',
+  'https://www.googleapis.com/auth/spreadsheets.readonly'
+]
 [GoogleDrive] Access verification successful
 [GoogleDrive] Response: {
   "files": [
     {
-      "id": "1nUQ-W-f9c90Rs3xwMCU1Yi12jhh2bpAO"
+      "id": "1U4ajyWmGjkUV7EZ7895abacuGDoz3kdIiKjWMrbxb18"
     }
   ]
 }
 [Routes] Access verification result: true
-11:50:16 AM [express] GET /api/google-drive/verify 304 in 3176ms :: {"configured":true,"hasAccess":tr…
-11:50:23 AM [express] GET /api/google-drive/files/1nUQ-W-f9c90Rs3xwMCU1Yi12jhh2bpAO 304 in 470ms :: […
-11:50:35 AM [express] POST /api/students/import-from-drive 200 in 1213ms :: {"message":"Successfully …
-11:50:35 AM [express] GET /api/students 200 in 0ms :: [{"name":"Alex Chen","primaryLanguage":"English…
+9:12:24 PM [express] GET /api/google-drive/verify 304 in 2590ms :: {"configured":true,"hasAccess":tr…
+9:12:47 PM [express] GET /api/google-drive/files/1nUQ-W-f9c90Rs3xwMCU1Yi12jhh2bpAO 304 in 253ms :: […
+[Sheets] Getting sheets for spreadsheet ID: 1U4ajyWmGjkUV7EZ7895abacuGDoz3kdIiKjWMrbxb18
+[Sheets] Calling getSheetsList...
+[GoogleDrive] Getting sheets for spreadsheet: 1U4ajyWmGjkUV7EZ7895abacuGDoz3kdIiKjWMrbxb18
+[GoogleDrive] Auth email: lassroom-seater-drive-access@gen-lang-client-0624712071.iam.gserviceaccount.com
+[GoogleDrive] Auth scopes: https://www.googleapis.com/auth/drive.readonly,https://www.googleapis.com/auth/spreadsheets.readonly
+Error getting sheets list from Google Sheets: GaxiosError: Google Sheets API has not been used in project 268263437057 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/sheets.googleapis.com/overview?project=268263437057 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
+    at Gaxios._request (/Users/archermorgan/Documents/code/classroom-seater-app/node_modules/gaxios/src/gaxios.ts:211:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async JWT.requestAsync (/Users/archermorgan/Documents/code/classroom-seater-app/node_modules/google-auth-library/build/src/auth/oauth2client.js:463:20)
+    at async createAPIRequestAsync (/Users/archermorgan/Documents/code/classroom-seater-app/node_modules/googleapis-common/build/src/apirequest.js:308:25)
+    at async GoogleDriveService.getSheetsList (/Users/archermorgan/Documents/code/classroom-seater-app/server/google-drive.ts:83:24)
+    at async <anonymous> (/Users/archermorgan/Documents/code/classroom-seater-app/server/routes.ts:319:22) {
+  config: {
+    url: URL {
+      href: 'https://sheets.googleapis.com/v4/spreadsheets/1U4ajyWmGjkUV7EZ7895abacuGDoz3kdIiKjWMrbxb18?fields=sheets.properties%28sheetId%2Ctitle%2Cindex%2CgridProperties.rowCount%2CgridProperties.columnCount%29',
+      origin: 'https://sheets.googleapis.com',
+      protocol: 'https:',
+      username: '',
+      password: '',
+      host: 'sheets.googleapis.com',
+      hostname: 'sheets.googleapis.com',
+      port: '',
+      pathname: '/v4/spreadsheets/1U4ajyWmGjkUV7EZ7895abacuGDoz3kdIiKjWMrbxb18',
+      search: '?fields=sheets.properties%28sheetId%2Ctitle%2Cindex%2CgridProperties.rowCount%2CgridProperties.columnCount%29',
+      searchParams: URLSearchParams {
+        'fields' => 'sheets.properties(sheetId,title,index,gridProperties.rowCount,gridProperties.columnCount)' },
+      hash: ''
+    },
+    method: 'GET',
+    apiVersion: '',
+    userAgentDirectives: [ [Object] ],
+    paramsSerializer: [Function (anonymous)],
+    headers: Headers {
+      'accept-encoding': 'gzip',
+      authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.',
+      'user-agent': 'google-api-nodejs-client/8.0.0 (gzip)',
+      'x-goog-api-client': 'gdcl/8.0.0 gl-node/24.6.0'
+    },
+    params: {
+      fields: 'sheets.properties(sheetId,title,index,gridProperties.rowCount,gridProperties.columnCount)'
+    },
+    validateStatus: [Function (anonymous)],
+    retry: true,
+    responseType: 'unknown',
+    errorRedactor: [Function: defaultErrorRedactor],
+    retryConfig: {
+      currentRetryAttempt: 0,
+      retry: 3,
+      httpMethodsToRetry: [Array],
+      noResponseRetries: 2,
+      retryDelayMultiplier: 2,
+      timeOfFirstRequest: 1757207569332,
+      totalTimeout: 9007199254740991,
+      maxRetryDelay: 9007199254740991,
+      statusCodesToRetry: [Array]
+    }
+  },
+  response: Response {
+    size: 0,
+    data: { error: [Object] },
+    config: {
+      url: URL {},
+      method: 'GET',
+      apiVersion: '',
+      userAgentDirectives: [Array],
+      paramsSerializer: [Function (anonymous)],
+      headers: Headers {
+        'accept-encoding': 'gzip',
+        authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.',
+        'user-agent': 'google-api-nodejs-client/8.0.0 (gzip)',
+        'x-goog-api-client': 'gdcl/8.0.0 gl-node/24.6.0'
+      },
+      params: [Object],
+      validateStatus: [Function (anonymous)],
+      retry: true,
+      responseType: 'unknown',
+      errorRedactor: [Function: defaultErrorRedactor]
+    },
+    Symbol(Body internals): {
+      body: [Gunzip],
+      stream: [Gunzip],
+      boundary: null,
+      disturbed: true,
+      error: null
+    },
+    Symbol(Response internals): {
+      type: 'default',
+      url: 'https://sheets.googleapis.com/v4/spreadsheets/1U4ajyWmGjkUV7EZ7895abacuGDoz3kdIiKjWMrbxb18?fields=sheets.properties%28sheetId%2Ctitle%2Cindex%2CgridProperties.rowCount%2CgridProperties.columnCount%29',
+      status: 403,
+      statusText: 'Forbidden',
+      headers: [Object],
+      counter: 0,
+      highWaterMark: 16384
+    }
+  },
+  code: 403,
+  status: 403,
+  error: undefined,
+  Symbol(gaxios-gaxios-error): '7.1.1',
+  [cause]: {
+    message: 'Google Sheets API has not been used in project 268263437057 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/sheets.googleapis.com/overview?project=268263437057 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.',
+    code: 403,
+    status: 'PERMISSION_DENIED',
+    errors: [ [Object] ],
+    details: [ [Object], [Object], [Object] ]
+  }
+}
+Error message: Google Sheets API has not been used in project 268263437057 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/sheets.googleapis.com/overview?project=268263437057 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
+Error stack: Error: Google Sheets API has not been used in project 268263437057 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/sheets.googleapis.com/overview?project=268263437057 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
+    at Gaxios._request (/Users/archermorgan/Documents/code/classroom-seater-app/node_modules/gaxios/src/gaxios.ts:211:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async JWT.requestAsync (/Users/archermorgan/Documents/code/classroom-seater-app/node_modules/google-auth-library/build/src/auth/oauth2client.js:463:20)
+    at async createAPIRequestAsync (/Users/archermorgan/Documents/code/classroom-seater-app/node_modules/googleapis-common/build/src/apirequest.js:308:25)
+    at async GoogleDriveService.getSheetsList (/Users/archermorgan/Documents/code/classroom-seater-app/server/google-drive.ts:83:24)
+    at async <anonymous> (/Users/archermorgan/Documents/code/classroom-seater-app/server/routes.ts:319:22)
+Error listing Google Sheets: Error: Failed to get sheets list from Google Sheets
+    at GoogleDriveService.getSheetsList (/Users/archermorgan/Documents/code/classroom-seater-app/server/google-drive.ts:103:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/archermorgan/Documents/code/classroom-seater-app/server/routes.ts:319:22)
+Error details: Error: Failed to get sheets list from Google Sheets
+    at GoogleDriveService.getSheetsList (/Users/archermorgan/Documents/code/classroom-seater-app/server/google-drive.ts:103:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/archermorgan/Documents/code/classroom-seater-app/server/routes.ts:319:22)
+9:12:49 PM [express] GET /api/google-drive/sheets/1U4ajyWmGjkUV7EZ7895abacuGDoz3kdIiKjWMrbxb18 500 i…
+[Sheets] Getting sheets for spreadsheet ID: 1U4ajyWmGjkUV7EZ7895abacuGDoz3kdIiKjWMrbxb18
+[Sheets] Calling getSheetsList...
+[GoogleDrive] Getting sheets for spreadsheet: 1U4ajyWmGjkUV7EZ7895abacuGDoz3kdIiKjWMrbxb18
+[GoogleDrive] Auth email: lassroom-seater-drive-access@gen-lang-client-0624712071.iam.gserviceaccount.com
+[GoogleDrive] Auth scopes: https://www.googleapis.com/auth/drive.readonly,https://www.googleapis.com/auth/spreadsheets.readonly
+Error getting sheets list from Google Sheets: GaxiosError: Google Sheets API has not been used in project 268263437057 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/sheets.googleapis.com/overview?project=268263437057 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
+    at Gaxios._request (/Users/archermorgan/Documents/code/classroom-seater-app/node_modules/gaxios/src/gaxios.ts:211:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async JWT.requestAsync (/Users/archermorgan/Documents/code/classroom-seater-app/node_modules/google-auth-library/build/src/auth/oauth2client.js:463:20)
+    at async createAPIRequestAsync (/Users/archermorgan/Documents/code/classroom-seater-app/node_modules/googleapis-common/build/src/apirequest.js:308:25)
+    at async GoogleDriveService.getSheetsList (/Users/archermorgan/Documents/code/classroom-seater-app/server/google-drive.ts:83:24)
+    at async <anonymous> (/Users/archermorgan/Documents/code/classroom-seater-app/server/routes.ts:319:22) {
+  config: {
+    url: URL {
+      href: 'https://sheets.googleapis.com/v4/spreadsheets/1U4ajyWmGjkUV7EZ7895abacuGDoz3kdIiKjWMrbxb18?fields=sheets.properties%28sheetId%2Ctitle%2Cindex%2CgridProperties.rowCount%2CgridProperties.columnCount%29',
+      origin: 'https://sheets.googleapis.com',
+      protocol: 'https:',
+      username: '',
+      password: '',
+      host: 'sheets.googleapis.com',
+      hostname: 'sheets.googleapis.com',
+      port: '',
+      pathname: '/v4/spreadsheets/1U4ajyWmGjkUV7EZ7895abacuGDoz3kdIiKjWMrbxb18',
+      search: '?fields=sheets.properties%28sheetId%2Ctitle%2Cindex%2CgridProperties.rowCount%2CgridProperties.columnCount%29',
+      searchParams: URLSearchParams {
+        'fields' => 'sheets.properties(sheetId,title,index,gridProperties.rowCount,gridProperties.columnCount)' },
+      hash: ''
+    },
+    method: 'GET',
+    apiVersion: '',
+    userAgentDirectives: [ [Object] ],
+    paramsSerializer: [Function (anonymous)],
+    headers: Headers {
+      'accept-encoding': 'gzip',
+      authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.',
+      'user-agent': 'google-api-nodejs-client/8.0.0 (gzip)',
+      'x-goog-api-client': 'gdcl/8.0.0 gl-node/24.6.0'
+    },
+    params: {
+      fields: 'sheets.properties(sheetId,title,index,gridProperties.rowCount,gridProperties.columnCount)'
+    },
+    validateStatus: [Function (anonymous)],
+    retry: true,
+    responseType: 'unknown',
+    errorRedactor: [Function: defaultErrorRedactor],
+    retryConfig: {
+      currentRetryAttempt: 0,
+      retry: 3,
+      httpMethodsToRetry: [Array],
+      noResponseRetries: 2,
+      retryDelayMultiplier: 2,
+      timeOfFirstRequest: 1757207592974,
+      totalTimeout: 9007199254740991,
+      maxRetryDelay: 9007199254740991,
+      statusCodesToRetry: [Array]
+    }
+  },
+  response: Response {
+    size: 0,
+    data: { error: [Object] },
+    config: {
+      url: URL {},
+      method: 'GET',
+      apiVersion: '',
+      userAgentDirectives: [Array],
+      paramsSerializer: [Function (anonymous)],
+      headers: Headers {
+        'accept-encoding': 'gzip',
+        authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.',
+        'user-agent': 'google-api-nodejs-client/8.0.0 (gzip)',
+        'x-goog-api-client': 'gdcl/8.0.0 gl-node/24.6.0'
+      },
+      params: [Object],
+      validateStatus: [Function (anonymous)],
+      retry: true,
+      responseType: 'unknown',
+      errorRedactor: [Function: defaultErrorRedactor]
+    },
+    Symbol(Body internals): {
+      body: [Gunzip],
+      stream: [Gunzip],
+      boundary: null,
+      disturbed: true,
+      error: null
+    },
+    Symbol(Response internals): {
+      type: 'default',
+      url: 'https://sheets.googleapis.com/v4/spreadsheets/1U4ajyWmGjkUV7EZ7895abacuGDoz3kdIiKjWMrbxb18?fields=sheets.properties%28sheetId%2Ctitle%2Cindex%2CgridProperties.rowCount%2CgridProperties.columnCount%29',
+      status: 403,
+      statusText: 'Forbidden',
+      headers: [Object],
+      counter: 0,
+      highWaterMark: 16384
+    }
+  },
+  code: 403,
+  status: 403,
+  error: undefined,
+  Symbol(gaxios-gaxios-error): '7.1.1',
+  [cause]: {
+    message: 'Google Sheets API has not been used in project 268263437057 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/sheets.googleapis.com/overview?project=268263437057 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.',
+    code: 403,
+    status: 'PERMISSION_DENIED',
+    errors: [ [Object] ],
+    details: [ [Object], [Object], [Object] ]
+  }
+}
+Error message: Google Sheets API has not been used in project 268263437057 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/sheets.googleapis.com/overview?project=268263437057 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
+Error stack: Error: Google Sheets API has not been used in project 268263437057 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/sheets.googleapis.com/overview?project=268263437057 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
+    at Gaxios._request (/Users/archermorgan/Documents/code/classroom-seater-app/node_modules/gaxios/src/gaxios.ts:211:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async JWT.requestAsync (/Users/archermorgan/Documents/code/classroom-seater-app/node_modules/google-auth-library/build/src/auth/oauth2client.js:463:20)
+    at async createAPIRequestAsync (/Users/archermorgan/Documents/code/classroom-seater-app/node_modules/googleapis-common/build/src/apirequest.js:308:25)
+    at async GoogleDriveService.getSheetsList (/Users/archermorgan/Documents/code/classroom-seater-app/server/google-drive.ts:83:24)
+    at async <anonymous> (/Users/archermorgan/Documents/code/classroom-seater-app/server/routes.ts:319:22)
+Error listing Google Sheets: Error: Failed to get sheets list from Google Sheets
+    at GoogleDriveService.getSheetsList (/Users/archermorgan/Documents/code/classroom-seater-app/server/google-drive.ts:103:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/archermorgan/Documents/code/classroom-seater-app/server/routes.ts:319:22)
+Error details: Error: Failed to get sheets list from Google Sheets
+    at GoogleDriveService.getSheetsList (/Users/archermorgan/Documents/code/classroom-seater-app/server/google-drive.ts:103:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/archermorgan/Documents/code/classroom-seater-app/server/routes.ts:319:22)
+9:13:12 PM [express] GET /api/google-drive/sheets/1U4ajyWmGjkUV7EZ7895abacuGDoz3kdIiKjWMrbxb18 500 i…

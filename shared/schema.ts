@@ -39,8 +39,8 @@ export type InsertSeatingChart = z.infer<typeof insertSeatingChartSchema>;
 // CSV upload schema for validation
 export const csvStudentSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  primaryLanguage: z.string().min(1, "Primary language is required"),
-  skillLevel: z.enum(['beginner', 'intermediate', 'advanced']),
+  primaryLanguage: z.string().optional().default("English"),
+  skillLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional().default('intermediate'),
   worksWellWith: z.string().optional().transform(val => 
     val ? val.split(',').map(s => s.trim()).filter(Boolean) : []
   ),

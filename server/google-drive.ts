@@ -9,8 +9,21 @@ export interface GoogleDriveFile {
   mimeType?: string;
 }
 
+export interface GoogleSheet {
+  sheetId: number;
+  title: string;
+  index: number;
+  rowCount: number;
+  columnCount: number;
+}
+
+export interface GoogleSheetsFile extends GoogleDriveFile {
+  sheets?: GoogleSheet[];
+}
+
 export class GoogleDriveService {
   private drive: any;
+  private sheets: any;
   private auth: JWT;
 
   constructor() {
@@ -22,20 +35,24 @@ export class GoogleDriveService {
     this.auth = new google.auth.JWT({
       email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
       key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      scopes: ['https://www.googleapis.com/auth/drive.readonly'],
+      scopes: [
+        'https://www.googleapis.com/auth/drive.readonly',
+        'https://www.googleapis.com/auth/spreadsheets.readonly'
+      ],
     });
 
     this.drive = google.drive({ version: 'v3', auth: this.auth });
-    console.log('[GoogleDrive] Google Drive service initialized');
+    this.sheets = google.sheets({ version: 'v4', auth: this.auth });
+    console.log('[GoogleDrive] Google Drive and Sheets services initialized');
   }
 
   /**
-   * List CSV and Excel files in a specific Google Drive folder
+   * List CSV, Excel files, and Google Sheets in a specific Google Drive folder
    */
   async listSpreadsheetFiles(folderId: string): Promise<GoogleDriveFile[]> {
     try {
       const response = await this.drive.files.list({
-        q: `'${folderId}' in parents and (mimeType='text/csv' or mimeType='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' or mimeType='application/vnd.ms-excel') and trashed=false`,
+        q: `'${folderId}' in parents and (mimeType='text/csv' or mimeType='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' or mimeType='application/vnd.ms-excel' or mimeType='application/vnd.google-apps.spreadsheet') and trashed=false`,
         fields: 'files(id,name,modifiedTime,size,mimeType)',
         orderBy: 'modifiedTime desc',
       });
@@ -52,6 +69,72 @@ export class GoogleDriveService {
    */
   async listCSVFiles(folderId: string): Promise<GoogleDriveFile[]> {
     return this.listSpreadsheetFiles(folderId);
+  }
+
+  /**
+   * Get sheets information for a Google Sheets document
+   */
+  async getSheetsList(spreadsheetId: string): Promise<GoogleSheet[]> {
+    try {
+      console.log(`[GoogleDrive] Getting sheets for spreadsheet: ${spreadsheetId}`);
+      console.log(`[GoogleDrive] Auth email: ${this.auth.email}`);
+      console.log(`[GoogleDrive] Auth scopes: ${this.auth.scopes}`);
+      
+      const response = await this.sheets.spreadsheets.get({
+        spreadsheetId: spreadsheetId,
+        fields: 'sheets.properties(sheetId,title,index,gridProperties.rowCount,gridProperties.columnCount)'
+      });
+
+      console.log(`[GoogleDrive] Sheets API response:`, JSON.stringify(response.data, null, 2));
+
+      return response.data.sheets?.map((sheet: any) => ({
+        sheetId: sheet.properties.sheetId,
+        title: sheet.properties.title,
+        index: sheet.properties.index,
+        rowCount: sheet.properties.gridProperties?.rowCount || 0,
+        columnCount: sheet.properties.gridProperties?.columnCount || 0
+      })) || [];
+    } catch (error) {
+      console.error('Error getting sheets list from Google Sheets:', error);
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
+      throw new Error('Failed to get sheets list from Google Sheets');
+    }
+  }
+
+  /**
+   * Download content from a specific sheet in a Google Sheets document
+   */
+  async downloadSheetContent(spreadsheetId: string, sheetName: string): Promise<Buffer> {
+    try {
+      const response = await this.sheets.spreadsheets.values.get({
+        spreadsheetId: spreadsheetId,
+        range: sheetName,
+        valueRenderOption: 'UNFORMATTED_VALUE',
+        dateTimeRenderOption: 'FORMATTED_STRING'
+      });
+
+      const values = response.data.values || [];
+      
+      // Convert to CSV format
+      const csvContent = values.map((row: any[]) => 
+        row.map(cell => {
+          const cellStr = String(cell || '');
+          // Escape quotes and wrap in quotes if contains comma, quote, or newline
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return `"${cellStr.replace(/"/g, '""')}"`;
+          }
+          return cellStr;
+        }).join(',')
+      ).join('\n');
+
+      return Buffer.from(csvContent, 'utf-8');
+    } catch (error) {
+      console.error('Error downloading sheet content from Google Sheets:', error);
+      throw new Error('Failed to download sheet content from Google Sheets');
+    }
   }
 
   /**
