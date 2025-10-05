@@ -1,25 +1,25 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, jsonb, integer } from "drizzle-orm/pg-core";
+import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const students = pgTable("students", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const students = sqliteTable("students", {
+  id: text("id").primaryKey(),
   name: text("name").notNull(),
   primaryLanguage: text("primary_language").notNull(),
   skillLevel: text("skill_level").notNull(), // 'beginner', 'intermediate', 'advanced'
-  worksWellWith: jsonb("works_well_with").$type<string[]>().notNull().default([]),
-  avoidPairing: jsonb("avoid_pairing").$type<string[]>().notNull().default([]),
+  worksWellWith: text("works_well_with", { mode: 'json' }).$type<string[]>().notNull().default(sql`'[]'`),
+  avoidPairing: text("avoid_pairing", { mode: 'json' }).$type<string[]>().notNull().default(sql`'[]'`),
   notes: text("notes").notNull().default(""),
 });
 
-export const seatingCharts = pgTable("seating_charts", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const seatingCharts = sqliteTable("seating_charts", {
+  id: text("id").primaryKey(),
   name: text("name").notNull(),
   layout: text("layout").notNull(), // 'traditional-rows', 'stadium', 'horseshoe', 'double-horseshoe', 'circle', 'groups', 'pairs'
   strategy: text("strategy").notNull(), // 'mixed-ability', 'skill-clustering', 'language-support', 'collaborative-pairs', 'attention-zone', 'behavior-management', 'random'
-  seats: jsonb("seats").$type<{position: number, studentId: string | null, customX?: number, customY?: number}[]>().notNull(),
-  students: jsonb("students").$type<{id: string, name: string, primaryLanguage: string, skillLevel: string, worksWellWith: string[], avoidPairing: string[], notes: string}[]>().notNull().default([]),
+  seats: text("seats", { mode: 'json' }).$type<{position: number, studentId: string | null, customX?: number, customY?: number}[]>().notNull(),
+  students: text("students", { mode: 'json' }).$type<{id: string, name: string, primaryLanguage: string, skillLevel: string, worksWellWith: string[], avoidPairing: string[], notes: string}[]>().notNull().default(sql`'[]'`),
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 

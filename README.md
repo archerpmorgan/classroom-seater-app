@@ -45,7 +45,8 @@ An intelligent classroom seating chart generator that helps educators create opt
 
 ### 💾 Save & Load Charts
 - **Save Layouts**: Save complete seating arrangements with custom positions
-- **Persistent Storage**: All saved charts include student data and desk positions
+- **SQLite Persistence**: All data stored in local SQLite database (database.db)
+- **Survives Restarts**: Charts and student data persist even when app is closed
 - **Load Previous Charts**: Restore any saved chart with all students and positions intact
 - **Delete Charts**: Remove old or unused seating arrangements
 - **Named Charts**: Give each chart a descriptive name (e.g., "Period 3 - Fall 2024")
@@ -130,12 +131,13 @@ Mike Davis,English,beginner,,,Very active learner
 - Select two students from dropdowns
 - Click "Swap Positions" to exchange them
 
-**Quick Actions:**
-- **Random Student**: Randomly select a student for participation
-- **Shuffle All Students**: Randomly reassign all students to seats
-- **Add Empty Desk**: Add an extra desk to the center of the room
-- **Clear Chart**: Remove all seat assignments (keeps students loaded)
-- **Undo**: Step back through changes (shows number of steps available)
+**Quick Actions (Header Toolbar):**
+All quick action buttons are conveniently located in the header for easy access:
+- **Random Student** (✨): Randomly select a student for participation with animated highlighting
+- **Clear Selection** (✕): Remove highlighting from selected student (appears after random selection)
+- **Shuffle All Students** (🔀): Randomly reassign all students to seats
+- **Add Empty Desk** (+): Add an extra desk to the center of the room
+- **Clear Chart** (🧹): Remove all seat assignments (keeps students loaded)
 
 ### 6. Save Your Chart
 1. Click the Save button (💾) in the header
@@ -166,15 +168,15 @@ Mike Davis,English,beginner,,,Very active learner
 
 ### Random Student Selection
 Perfect for cold-calling, participation, and share-outs:
-1. Click **"Random Student"** in Quick Actions
-2. Watch animated selection cycle through students
+1. Click the **sparkles icon (✨)** in the header toolbar
+2. Watch animated selection cycle through students (15 iterations)
 3. Final student highlighted with:
    - Pulsing yellow ring
    - Enlarged desk (110% scale)
    - Elevated shadow
    - High z-index (appears on top)
-4. Toast shows: "Student Selected! [Name] has been randomly selected"
-5. Click **"Clear Selection"** to remove highlighting
+4. Toast notification displays: "Student Selected! [Name] has been randomly selected"
+5. Click **"Clear Selection" (✕)** button in header to remove highlighting
 
 ### Multi-Select and Group Movement
 - **Box Selection**: Hold Shift and drag in empty space to select multiple desks
@@ -270,10 +272,11 @@ npm run dev
 
 ### Backend
 - **Express.js** with TypeScript
-- **In-Memory Storage** for development (MemStorage class)
-- **Drizzle ORM** for database schema (PostgreSQL support)
+- **SQLite Database** for persistent storage (better-sqlite3)
+- **Drizzle ORM** for type-safe database operations
 - **Multer** for CSV/Excel file uploads
 - **Google APIs** for Drive integration
+- **Automatic Schema Creation** on startup
 
 ### Key Libraries
 - **html2canvas**: Layout image export
@@ -303,12 +306,13 @@ classroom-seater-app/
 ├── server/                 # Backend Express application
 │   ├── index.ts           # Server entry point
 │   ├── routes.ts          # API endpoint definitions
-│   ├── storage.ts         # In-memory data storage
-│   └── db.ts              # Database setup (SQLite fallback)
+│   ├── storage.ts         # SQLite storage implementation
+│   └── db.ts              # Database connection & schema setup
 ├── shared/                 # Shared TypeScript types
-│   └── schema.ts          # Data models and validation
+│   └── schema.ts          # Data models and validation (SQLite)
 ├── migrations/             # Database migrations
 ├── dist/                  # Built production files
+├── database.db            # SQLite database file (persistent)
 ├── start.sh               # Startup script
 ├── stop.sh                # Shutdown script
 ├── restart.sh             # Restart script
@@ -367,12 +371,20 @@ function myCustomStrategy(students: Student[], seats: Seat[]) {
 - Check that sheet is shared with service account email
 - Ensure shareable link has viewing permissions
 
-## 📊 Data Privacy
+## 📊 Data Privacy & Persistence
 
-- All data is stored locally in your deployment
-- No student data is sent to external services (except Google Drive if configured)
-- Privacy mode hides sensitive information during screen sharing
-- CSV exports allow you to maintain offline backups
+### Data Storage
+- **Local SQLite Database**: All data stored in `database.db` file
+- **Persistent Across Restarts**: Charts and students survive app restarts
+- **No External Dependencies**: Works completely offline (except Google Drive imports)
+- **Privacy Mode**: Hide sensitive information during screen sharing
+- **Export Options**: CSV exports for offline backups
+
+### Data Security
+- All student data remains on your local machine
+- Google Drive integration only used when explicitly importing
+- No telemetry or analytics tracking
+- Database file can be backed up or version controlled
 
 ## 🤝 Contributing
 

@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import UploadArea from "@/components/upload-area";
@@ -19,10 +19,7 @@ export default function SeatingChart() {
   const [strategy, setStrategy] = useState<string>('mixed-ability');
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentChart, setCurrentChart] = useState<{position: number, studentId: string | null, customX?: number, customY?: number}[]>([]);
-  const [privacyMode, setPrivacyMode] = useState(false);
-  const [isSwapModalOpen, setIsSwapModalOpen] = useState(false);
-  const [firstStudentId, setFirstStudentId] = useState<string>('');
-  const [secondStudentId, setSecondStudentId] = useState<string>('');
+  const [privacyMode, setPrivacyMode] = useState(true);
   const [deskSwapMode, setDeskSwapMode] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [chartName, setChartName] = useState('');
@@ -30,6 +27,13 @@ export default function SeatingChart() {
   // Random student selection state
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [isSelecting, setIsSelecting] = useState(false);
+
+  // Student swap mode state
+  const [studentSwapMode, setStudentSwapMode] = useState(false);
+  const [firstSwapStudentId, setFirstSwapStudentId] = useState<string | null>(null);
+
+  // Delete desk mode state
+  const [deleteDeskMode, setDeleteDeskMode] = useState(false);
 
   // Undo system state
   const [chartHistory, setChartHistory] = useState<{position: number, studentId: string | null, customX?: number, customY?: number}[][]>([]);
@@ -123,7 +127,7 @@ export default function SeatingChart() {
   });
 
   const deleteChartMutation = useMutation({
-    mutationFn: (chartId: number) => apiRequest('DELETE', `/api/seating-charts/${chartId}`),
+    mutationFn: (chartId: string) => apiRequest('DELETE', `/api/seating-charts/${chartId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/seating-charts'] });
       toast({
@@ -292,7 +296,7 @@ export default function SeatingChart() {
     }
   };
 
-  const handleDeleteChart = (chartId: number) => {
+  const handleDeleteChart = (chartId: string) => {
     deleteChartMutation.mutate(chartId);
   };
 
@@ -507,8 +511,48 @@ export default function SeatingChart() {
     setIsSelecting(false);
   };
 
-  const handleSwapStudents = () => {
-    if (!firstStudentId || !secondStudentId || firstStudentId === secondStudentId) {
+  const handleStudentClick = (studentId: string) => {
+    if (!studentSwapMode) return;
+
+    if (!firstSwapStudentId) {
+      // First student selected
+      setFirstSwapStudentId(studentId);
+      toast({
+        title: "First Student Selected",
+        description: "Click another student to swap",
+      });
+    } else if (firstSwapStudentId === studentId) {
+      // Clicked same student - deselect
+      setFirstSwapStudentId(null);
+      toast({
+        title: "Selection Cleared",
+        description: "Select first student again",
+      });
+    } else {
+      // Second student selected - perform swap
+      handleSwapStudents(firstSwapStudentId, studentId);
+    }
+  };
+
+  const handleDeskClick = (position: number) => {
+    if (!deleteDeskMode) return;
+
+    // Remove the desk from the chart
+    const newChart = currentChart.filter(seat => seat.position !== position);
+    setCurrentChart(newChart);
+    saveToHistory(newChart);
+
+    toast({
+      title: "Desk Removed",
+      description: "Desk has been deleted from the chart",
+    });
+  };
+
+  const handleSwapStudents = (firstId: string, secondId: string) => {
+    const first = firstId;
+    const second = secondId;
+
+    if (!first || !second || first === second) {
       toast({
         title: "Invalid Selection",
         description: "Please select two different students to swap",
@@ -518,8 +562,8 @@ export default function SeatingChart() {
     }
 
     // Find the positions of both students
-    const firstStudentPosition = currentChart.findIndex(seat => seat.studentId === firstStudentId);
-    const secondStudentPosition = currentChart.findIndex(seat => seat.studentId === secondStudentId);
+    const firstStudentPosition = currentChart.findIndex(seat => seat.studentId === first);
+    const secondStudentPosition = currentChart.findIndex(seat => seat.studentId === second);
 
     if (firstStudentPosition === -1 || secondStudentPosition === -1) {
       toast({
@@ -532,15 +576,13 @@ export default function SeatingChart() {
 
     // Create new chart with swapped students
     const newChart = [...currentChart];
-    newChart[firstStudentPosition] = { ...newChart[firstStudentPosition], studentId: secondStudentId };
-    newChart[secondStudentPosition] = { ...newChart[secondStudentPosition], studentId: firstStudentId };
+    newChart[firstStudentPosition] = { ...newChart[firstStudentPosition], studentId: second };
+    newChart[secondStudentPosition] = { ...newChart[secondStudentPosition], studentId: first };
 
     setCurrentChart(newChart);
     // Save to history after swap
     saveToHistory(newChart);
-    setIsSwapModalOpen(false);
-    setFirstStudentId('');
-    setSecondStudentId('');
+    setFirstSwapStudentId(null);
 
     toast({
       title: "Success",
@@ -704,16 +746,37 @@ export default function SeatingChart() {
               >
                 <Download className="w-4 h-4" />
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="icon"
-                onClick={() => setIsSwapModalOpen(true)}
+                onClick={() => {
+                  setStudentSwapMode(!studentSwapMode);
+                  setFirstSwapStudentId(null);
+                }}
                 disabled={currentChart.length === 0}
                 data-testid="button-swap-students"
-                title="Swap Student Positions"
+                title="Click to Swap Students"
+                className={studentSwapMode ? "bg-orange-100 hover:bg-orange-200" : ""}
               >
                 <ArrowLeftRight className="w-4 h-4" />
               </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setDeleteDeskMode(!deleteDeskMode)}
+                    disabled={currentChart.length === 0}
+                    data-testid="button-delete-desk"
+                    className={deleteDeskMode ? "bg-red-100 hover:bg-red-200 text-red-600" : ""}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{deleteDeskMode ? "Delete Desk Mode Active - Click a desk to remove it" : "Delete Desk Mode"}</p>
+                </TooltipContent>
+              </Tooltip>
               <Button
                 variant="outline"
                 size="icon"
@@ -947,7 +1010,7 @@ export default function SeatingChart() {
                       className="text-primary"
                       data-testid="input-layout-stadium"
                     />
-                    <span className="text-sm">Stadium/V-Shape <span className="text-xs text-red-600">🚧 (Under Development)</span></span>
+                    <span className="text-sm">Stadium/V-Shape <span className="text-xs text-red-600">🚧 (WIP)</span></span>
                   </label>
                   <label className="flex items-center space-x-3 cursor-pointer">
                     <input 
@@ -959,7 +1022,7 @@ export default function SeatingChart() {
                       className="text-primary"
                       data-testid="input-layout-horseshoe"
                     />
-                    <span className="text-sm">Horseshoe (U-Shape) <span className="text-xs text-red-600">🚧 (Under Development)</span></span>
+                    <span className="text-sm">Horseshoe (U-Shape) <span className="text-xs text-red-600">🚧 (WIP)</span></span>
                   </label>
                   <label className="flex items-center space-x-3 cursor-pointer">
                     <input 
@@ -971,7 +1034,7 @@ export default function SeatingChart() {
                       className="text-primary"
                       data-testid="input-layout-double-horseshoe"
                     />
-                    <span className="text-sm">Double Horseshoe <span className="text-xs text-red-600">🚧 (Under Development)</span></span>
+                    <span className="text-sm">Double Horseshoe <span className="text-xs text-red-600">🚧 (WIP)</span></span>
                   </label>
                   <label className="flex items-center space-x-3 cursor-pointer">
                     <input 
@@ -983,7 +1046,7 @@ export default function SeatingChart() {
                       className="text-primary"
                       data-testid="input-layout-circle"
                     />
-                    <span className="text-sm">Circle/Roundtable <span className="text-xs text-red-600">🚧 (Under Development)</span></span>
+                    <span className="text-sm">Circle/Roundtable <span className="text-xs text-red-600">🚧 (WIP)</span></span>
                   </label>
                   <label className="flex items-center space-x-3 cursor-pointer">
                     <input 
@@ -1108,7 +1171,7 @@ export default function SeatingChart() {
                           <Button size="sm" variant="outline" onClick={() => handleLoadChart(chart)}>Load</Button>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleDeleteChart(Number(chart.id))}>
+                              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleDeleteChart(chart.id)}>
                                 <Trash2 className="w-4 h-4 text-destructive" />
                               </Button>
                             </TooltipTrigger>
@@ -1184,7 +1247,21 @@ export default function SeatingChart() {
                         Privacy Mode
                       </Badge>
                     )}
-                    
+
+                    {studentSwapMode && (
+                      <Badge variant="outline" className="text-xs bg-orange-100">
+                        <ArrowLeftRight className="w-3 h-3 mr-1" />
+                        Swap Mode
+                      </Badge>
+                    )}
+
+                    {deleteDeskMode && (
+                      <Badge variant="outline" className="text-xs bg-red-100 text-red-600">
+                        <Trash2 className="w-3 h-3 mr-1" />
+                        Delete Desk Mode
+                      </Badge>
+                    )}
+
                     {deskSwapMode && (
                       <Badge variant="outline" className="text-xs">
                         <RefreshCw className="w-3 h-3 mr-1" />
@@ -1222,6 +1299,11 @@ export default function SeatingChart() {
                     deskSwapMode={deskSwapMode}
                     selectedStudentId={selectedStudentId}
                     isSelecting={isSelecting}
+                    studentSwapMode={studentSwapMode}
+                    firstSwapStudentId={firstSwapStudentId}
+                    onStudentClick={handleStudentClick}
+                    deleteDeskMode={deleteDeskMode}
+                    onDeskClick={handleDeskClick}
                   />
                 </TooltipProvider>
               </CardContent>
@@ -1232,86 +1314,6 @@ export default function SeatingChart() {
           </div>
         </div>
       </div>
-
-      {/* Swap Students Modal */}
-      {isSwapModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-lg p-6 max-w-md mx-4 w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-card-foreground">Swap Student Positions</h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  setIsSwapModalOpen(false);
-                  setFirstStudentId('');
-                  setSecondStudentId('');
-                }}
-                className="h-6 w-6"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  Select First Student
-                </label>
-                <Select onValueChange={(value) => setFirstStudentId(value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose first student..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {students.map((student) => (
-                      <SelectItem key={student.id} value={student.id}>
-                        {student.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  Select Second Student
-                </label>
-                <Select onValueChange={(value) => setSecondStudentId(value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose second student..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {students.map((student) => (
-                      <SelectItem key={student.id} value={student.id}>
-                        {student.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsSwapModalOpen(false);
-                    setFirstStudentId('');
-                    setSecondStudentId('');
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSwapStudents}
-                  disabled={!firstStudentId || !secondStudentId || firstStudentId === secondStudentId}
-                >
-                  Swap Positions
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Loading Overlay */}
       {/* Save Chart Modal */}

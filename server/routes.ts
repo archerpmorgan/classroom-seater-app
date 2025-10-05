@@ -266,6 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const charts = await storage.getSeatingCharts();
       res.json(charts);
     } catch (error) {
+      console.error('Error fetching seating charts:', error);
       res.status(500).json({ message: "Failed to fetch seating charts" });
     }
   });
@@ -289,11 +290,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const validatedData = insertSeatingChartSchema.partial().parse(req.body);
       const chart = await storage.updateSeatingChart(id, validatedData);
-      
+
       if (!chart) {
         return res.status(404).json({ message: "Seating chart not found" });
       }
-      
+
       res.json(chart);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -301,6 +302,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.status(500).json({ message: "Failed to update seating chart" });
       }
+    }
+  });
+
+  app.delete("/api/seating-charts/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteSeatingChart(id);
+
+      if (!deleted) {
+        return res.status(404).json({ message: "Seating chart not found" });
+      }
+
+      res.json({ message: "Seating chart deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete seating chart" });
     }
   });
 

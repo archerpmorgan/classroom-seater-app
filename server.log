@@ -2,15 +2,34 @@
 > rest-express@1.0.0 dev
 > NODE_ENV=development tsx server/index.ts
 
-[dotenv@17.2.1] injecting env (2) from .env -- tip: ⚙️  enable debug logging with { debug: true }
-3:47:17 PM [express] Database initialized successfully.
-3:47:17 PM [express] serving on localhost:3000
-3:47:18 PM [express] GET /api/students 200 in 4ms :: []
+[dotenv@17.2.1] injecting env (2) from .env -- tip: ⚙️  override existing env vars with { override: true }
+5:25:19 PM [express] Database initialized successfully.
+5:25:19 PM [express] serving on localhost:3000
+5:25:20 PM [express] GET /api/students 200 in 7ms :: [{"id":"ff1fadd3-55c1-44e9-8e2e-0555983e2332","…
 Browserslist: browsers data (caniuse-lite) is 12 months old. Please run:
   npx update-browserslist-db@latest
   Why you should do it regularly: https://github.com/browserslist/update-db#readme
-3:51:28 PM [express] GET /api/students 200 in 2ms :: []
-3:51:28 PM [express] GET /api/seating-charts 200 in 1ms :: []
+5:28:13 PM [express] GET /api/students 304 in 1ms :: [{"id":"ff1fadd3-55c1-44e9-8e2e-0555983e2332","…
+5:28:13 PM [express] GET /api/seating-charts 304 in 1ms :: [{"id":"7ed32d28-3091-41dd-8787-b47f959aa…
+5:28:22 PM [express] DELETE /api/students 200 in 3ms :: {"message":"All students deleted successfull…
+5:28:22 PM [express] POST /api/students/batch 200 in 16ms :: {"message":"Successfully created 14 stu…
+5:28:22 PM [express] GET /api/students 200 in 1ms :: [{"id":"ff1fadd3-55c1-44e9-8e2e-0555983e2332","…
+5:29:12 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=M206AwNt6jgv9NINt-S55
+5:29:21 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=M206AwNt6jgv9NINt-S55
+5:39:51 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=M206AwNt6jgv9NINt-S55
+5:40:08 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=M206AwNt6jgv9NINt-S55
+5:40:08 PM [vite] hmr update /src/components/seating-chart-grid.tsx, /src/index.css?v=M206AwNt6jgv9NINt-S55
+5:49:47 PM [express] GET /api/students 304 in 2ms :: [{"id":"ff1fadd3-55c1-44e9-8e2e-0555983e2332","…
+5:49:47 PM [express] GET /api/seating-charts 304 in 1ms :: [{"id":"7ed32d28-3091-41dd-8787-b47f959aa…
+6:15:01 PM [express] DELETE /api/students 200 in 15ms :: {"message":"All students deleted successful…
+6:15:01 PM [express] POST /api/students/batch 200 in 18ms :: {"message":"Successfully created 14 stu…
+6:15:01 PM [express] GET /api/students 200 in 1ms :: [{"id":"ff1fadd3-55c1-44e9-8e2e-0555983e2332","…
+6:15:57 PM [express] POST /api/seating-charts 200 in 26ms :: {"name":"Period 1 Groups","layout":"gro…
+6:15:57 PM [express] GET /api/seating-charts 200 in 1ms :: [{"id":"7ed32d28-3091-41dd-8787-b47f959aa…
+6:16:01 PM [express] DELETE /api/seating-charts/9d743474-5edf-46ab-a95d-bb5550b8b3b9 200 in 3ms :: {…
+6:16:01 PM [express] GET /api/seating-charts 200 in 1ms :: [{"id":"7ed32d28-3091-41dd-8787-b47f959aa…
+6:16:03 PM [express] DELETE /api/students 200 in 2ms :: {"message":"All students deleted successfull…
+6:16:03 PM [express] GET /api/students 200 in 1ms :: []
 [Routes] Google Drive verification endpoint called
 [Routes] Checking environment variables...
 [Routes] GOOGLE_SERVICE_ACCOUNT_EMAIL: SET
@@ -35,19 +54,18 @@ Browserslist: browsers data (caniuse-lite) is 12 months old. Please run:
   ]
 }
 [Routes] Access verification result: true
-3:51:31 PM [express] GET /api/google-drive/verify 304 in 2066ms :: {"configured":true,"hasAccess":tr…
-3:51:34 PM [express] GET /api/google-drive/files/1nUQ-W-f9c90Rs3xwMCU1Yi12jhh2bpAO 304 in 221ms :: […
-[Import] Starting import from Google Drive file: 1_BJTauLSOUkkZcpl-IBf2t8leiaJyULu
+6:17:20 PM [express] GET /api/google-drive/verify 304 in 2645ms :: {"configured":true,"hasAccess":tr…
+6:17:24 PM [express] GET /api/google-drive/files/1nUQ-W-f9c90Rs3xwMCU1Yi12jhh2bpAO 304 in 360ms :: […
+[Import] Starting import from Google Drive file: 1ZHgorSnpRMhT_3GmOBeSutUUfuAkuF9t
 [Import] File metadata: {
-  id: '1_BJTauLSOUkkZcpl-IBf2t8leiaJyULu',
-  name: 'Algebra P7.xlsx',
-  modifiedTime: '2025-10-05T11:46:11.109Z',
-  size: '9867'
+  id: '1ZHgorSnpRMhT_3GmOBeSutUUfuAkuF9t',
+  name: 'Algebra P2.xlsx',
+  modifiedTime: '2025-10-05T11:44:51.679Z',
+  size: '9726'
 }
 [Import] Downloading file content from Google Drive
-[Import] Starting import from Google Drive file: 1_BJTauLSOUkkZcpl-IBf2t8leiaJyULu
-[Import] Downloaded 9867 bytes
-[Import] Parsed 997 rows with headers: [
+[Import] Downloaded 9726 bytes
+[Import] Parsed 998 rows with headers: [
   'name',
   'primarylanguage',
   'skilllevel',
@@ -55,34 +73,18 @@ Browserslist: browsers data (caniuse-lite) is 12 months old. Please run:
   'avoidpairing',
   'notes',
   'email',
-  'username',
-  'password'
+  'username'
 ]
-3:51:37 PM [express] POST /api/students/import-from-drive 200 in 871ms :: {"message":"Successfully i…
-3:51:37 PM [express] GET /api/students 200 in 1ms :: [{"name":"Adam Algahmi","primaryLanguage":"Arab…
-[Import] File metadata: {
-  id: '1_BJTauLSOUkkZcpl-IBf2t8leiaJyULu',
-  name: 'Algebra P7.xlsx',
-  modifiedTime: '2025-10-05T11:46:11.109Z',
-  size: '9867'
-}
-[Import] Downloading file content from Google Drive
-[Import] Downloaded 9867 bytes
-[Import] Parsed 997 rows with headers: [
-  'name',
-  'primarylanguage',
-  'skilllevel',
-  'workswellwith',
-  'avoidpairing',
-  'notes',
-  'email',
-  'username',
-  'password'
-]
-3:51:38 PM [express] POST /api/students/import-from-drive 200 in 804ms :: {"message":"Successfully i…
-3:51:38 PM [express] GET /api/students 200 in 0ms :: [{"name":"Adam Algahmi","primaryLanguage":"Arab…
-3:51:41 PM [express] DELETE /api/students 200 in 0ms :: {"message":"All students deleted successfull…
-3:51:42 PM [express] GET /api/students 200 in 0ms :: []
+6:17:27 PM [express] POST /api/students/import-from-drive 200 in 1037ms :: {"message":"Successfully …
+6:17:27 PM [express] GET /api/students 200 in 1ms :: [{"id":"f5b1bf98-7ec0-4c61-84d0-5ee318b1623d","…
+6:20:45 PM [express] POST /api/seating-charts 200 in 3ms :: {"name":"Period 2 Pairs","layout":"pairs…
+6:20:45 PM [express] GET /api/seating-charts 200 in 1ms :: [{"id":"7ed32d28-3091-41dd-8787-b47f959aa…
+6:35:22 PM [express] GET /api/students 304 in 4ms :: [{"id":"f5b1bf98-7ec0-4c61-84d0-5ee318b1623d","…
+6:35:22 PM [express] GET /api/seating-charts 304 in 1ms :: [{"id":"7ed32d28-3091-41dd-8787-b47f959aa…
+7:17:50 PM [express] POST /api/seating-charts 200 in 23ms :: {"name":"Period 2 Groups","layout":"gro…
+7:17:50 PM [express] GET /api/seating-charts 200 in 3ms :: [{"id":"7ed32d28-3091-41dd-8787-b47f959aa…
+7:18:39 PM [express] DELETE /api/students 200 in 2ms :: {"message":"All students deleted successfull…
+7:18:39 PM [express] GET /api/students 200 in 0ms :: []
 [Routes] Google Drive verification endpoint called
 [Routes] Checking environment variables...
 [Routes] GOOGLE_SERVICE_ACCOUNT_EMAIL: SET
@@ -103,8 +105,8 @@ Browserslist: browsers data (caniuse-lite) is 12 months old. Please run:
   ]
 }
 [Routes] Access verification result: true
-3:51:46 PM [express] GET /api/google-drive/verify 304 in 330ms :: {"configured":true,"hasAccess":tru…
-3:51:49 PM [express] GET /api/google-drive/files/1nUQ-W-f9c90Rs3xwMCU1Yi12jhh2bpAO 304 in 223ms :: […
+7:18:40 PM [express] GET /api/google-drive/verify 304 in 609ms :: {"configured":true,"hasAccess":tru…
+7:18:42 PM [express] GET /api/google-drive/files/1nUQ-W-f9c90Rs3xwMCU1Yi12jhh2bpAO 304 in 300ms :: […
 [Import] Starting import from Google Drive file: 1K7hSotDz7j47TqsQkaATVcuOejpmvf1v
 [Import] File metadata: {
   id: '1K7hSotDz7j47TqsQkaATVcuOejpmvf1v',
@@ -125,10 +127,61 @@ Browserslist: browsers data (caniuse-lite) is 12 months old. Please run:
   'username',
   'password'
 ]
-3:51:53 PM [express] POST /api/students/import-from-drive 200 in 1028ms :: {"message":"Successfully …
-3:51:53 PM [express] GET /api/students 200 in 0ms :: [{"name":"Abad Abad","primaryLanguage":"Arabic"…
-3:55:52 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=6ZL_lG8Py42C3cgHMlkVs
-3:56:02 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=6ZL_lG8Py42C3cgHMlkVs
-3:56:11 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=6ZL_lG8Py42C3cgHMlkVs
-3:57:33 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=6ZL_lG8Py42C3cgHMlkVs
-3:57:40 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=6ZL_lG8Py42C3cgHMlkVs
+7:18:48 PM [express] POST /api/students/import-from-drive 200 in 1278ms :: {"message":"Successfully …
+7:18:48 PM [express] GET /api/students 200 in 0ms :: [{"id":"2ac9584c-6647-425e-b0b2-8cccd66f6795","…
+7:18:54 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=M206AwNt6jgv9NINt-S55
+7:18:54 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=M206AwNt6jgv9NINt-S55
+7:18:56 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=M206AwNt6jgv9NINt-S55
+7:18:57 PM [vite] hmr update /src/pages/seating-chart.tsx, /src/index.css?v=M206AwNt6jgv9NINt-S55
+7:20:09 PM [express] POST /api/seating-charts 200 in 3ms :: {"name":"Period 4 Groups","layout":"grou…
+7:20:09 PM [express] GET /api/seating-charts 200 in 1ms :: [{"id":"7ed32d28-3091-41dd-8787-b47f959aa…
+7:24:25 PM [express] POST /api/seating-charts 200 in 3ms :: {"name":"Period 4 Pairs","layout":"pairs…
+7:24:25 PM [express] GET /api/seating-charts 200 in 1ms :: [{"id":"7ed32d28-3091-41dd-8787-b47f959aa…
+7:28:40 PM [express] DELETE /api/students 200 in 7ms :: {"message":"All students deleted successfull…
+7:28:40 PM [express] GET /api/students 200 in 2ms :: []
+[Routes] Google Drive verification endpoint called
+[Routes] Checking environment variables...
+[Routes] GOOGLE_SERVICE_ACCOUNT_EMAIL: SET
+[Routes] GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY: SET (length: 1703)
+[Routes] Environment variables configured, testing access...
+[GoogleDrive] Verifying access to Google Drive...
+[GoogleDrive] Auth email: lassroom-seater-drive-access@gen-lang-client-0624712071.iam.gserviceaccount.com
+[GoogleDrive] Auth scopes: [
+  'https://www.googleapis.com/auth/drive.readonly',
+  'https://www.googleapis.com/auth/spreadsheets.readonly'
+]
+[GoogleDrive] Access verification successful
+[GoogleDrive] Response: {
+  "files": [
+    {
+      "id": "1K7hSotDz7j47TqsQkaATVcuOejpmvf1v"
+    }
+  ]
+}
+[Routes] Access verification result: true
+7:28:41 PM [express] GET /api/google-drive/verify 304 in 500ms :: {"configured":true,"hasAccess":tru…
+7:28:44 PM [express] GET /api/google-drive/files/1nUQ-W-f9c90Rs3xwMCU1Yi12jhh2bpAO 200 in 376ms :: […
+[Import] Starting import from Google Drive file: 1_BJTauLSOUkkZcpl-IBf2t8leiaJyULu
+[Import] File metadata: {
+  id: '1_BJTauLSOUkkZcpl-IBf2t8leiaJyULu',
+  name: 'Algebra P7.xlsx',
+  modifiedTime: '2025-10-05T11:46:11.109Z',
+  size: '9867'
+}
+[Import] Downloading file content from Google Drive
+[Import] Downloaded 9867 bytes
+[Import] Parsed 997 rows with headers: [
+  'name',
+  'primarylanguage',
+  'skilllevel',
+  'workswellwith',
+  'avoidpairing',
+  'notes',
+  'email',
+  'username',
+  'password'
+]
+7:28:48 PM [express] POST /api/students/import-from-drive 200 in 1044ms :: {"message":"Successfully …
+7:28:48 PM [express] GET /api/students 200 in 1ms :: [{"id":"b5196846-ef9f-4a0c-af77-bab37beb012f","…
+7:32:20 PM [express] POST /api/seating-charts 200 in 7ms :: {"name":"Period 7 Pairs","layout":"pairs…
+7:32:20 PM [express] GET /api/seating-charts 200 in 3ms :: [{"id":"7ed32d28-3091-41dd-8787-b47f959aa…

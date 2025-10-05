@@ -12,6 +12,11 @@ interface SeatingChartGridProps {
   deskSwapMode?: boolean;
   selectedStudentId?: string | null;
   isSelecting?: boolean;
+  studentSwapMode?: boolean;
+  firstSwapStudentId?: string | null;
+  onStudentClick?: (studentId: string) => void;
+  deleteDeskMode?: boolean;
+  onDeskClick?: (position: number) => void;
 }
 
 interface SeatPosition {
@@ -30,7 +35,12 @@ export default function SeatingChartGrid({
   privacyMode,
   deskSwapMode = false,
   selectedStudentId = null,
-  isSelecting = false
+  isSelecting = false,
+  studentSwapMode = false,
+  firstSwapStudentId = null,
+  onStudentClick,
+  deleteDeskMode = false,
+  onDeskClick
 }: SeatingChartGridProps) {
   const [draggedStudent, setDraggedStudent] = useState<Student | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<number | null>(null);
@@ -380,19 +390,22 @@ export default function SeatingChartGrid({
 
     // Start with the current chart data
     const seatsFromChart = [...currentChart];
-    
-    // Add any missing positions from layout
-    layoutPositions.forEach(layoutPos => {
-      if (!seatsFromChart.some(seat => seat.position === layoutPos.position)) {
-        seatsFromChart.push({
-          position: layoutPos.position,
-          studentId: null,
-          customX: layoutPos.x,
-          customY: layoutPos.y
-        });
-      }
-    });
-    
+
+    // Only add missing positions from layout if the chart is empty
+    // This preserves manually deleted desks
+    if (currentChart.length === 0) {
+      layoutPositions.forEach(layoutPos => {
+        if (!seatsFromChart.some(seat => seat.position === layoutPos.position)) {
+          seatsFromChart.push({
+            position: layoutPos.position,
+            studentId: null,
+            customX: layoutPos.x,
+            customY: layoutPos.y
+          });
+        }
+      });
+    }
+
     // Ensure all seats have coordinates
     return seatsFromChart.map(seat => {
       const layoutPos = layoutPositionsMap.get(seat.position);
@@ -750,13 +763,20 @@ export default function SeatingChartGrid({
   };
 
   const handleContainerMouseDown = (e: React.MouseEvent) => {
-    // Don't start box select if we're already dragging something or if student drag is active
-    if (isDraggingTeacherDesk || isDraggingWhiteboard || isDraggingDoor || isDraggingDesk || draggedStudent) return;
-    
     // Check if we clicked on a desk
     const target = e.target as HTMLElement;
     const deskElement = target.closest('[data-desk-position]');
-    
+
+    // Handle delete mode first
+    if (deleteDeskMode && deskElement) {
+      const position = parseInt(deskElement.getAttribute('data-desk-position') || '0');
+      handleDeskMouseDown(e, position);
+      return;
+    }
+
+    // Don't start box select if we're already dragging something or if student drag is active
+    if (isDraggingTeacherDesk || isDraggingWhiteboard || isDraggingDoor || isDraggingDesk || draggedStudent) return;
+
     if (deskElement) {
       // Clicked on a desk - handle desk selection/dragging
       const position = parseInt(deskElement.getAttribute('data-desk-position') || '0');
@@ -766,12 +786,12 @@ export default function SeatingChartGrid({
       const containerRect = e.currentTarget.getBoundingClientRect();
       const startX = e.clientX - containerRect.left;
       const startY = e.clientY - containerRect.top;
-      
+
       // Clear selection if not holding Ctrl/Cmd
       if (!e.metaKey && !e.ctrlKey) {
         setSelectedDesks(new Set());
       }
-      
+
       setIsBoxSelecting(true);
       setBoxSelectStart({ x: startX, y: startY });
       setBoxSelectEnd({ x: startX, y: startY });
@@ -781,7 +801,15 @@ export default function SeatingChartGrid({
   const handleDeskMouseDown = (e: React.MouseEvent, position: number) => {
     // Prevent this from interfering with student drag and drop
     if (draggedStudent) return;
-    
+
+    // Handle delete desk mode
+    if (deleteDeskMode && onDeskClick) {
+      e.preventDefault();
+      e.stopPropagation();
+      onDeskClick(position);
+      return;
+    }
+
     e.preventDefault();
     e.stopPropagation();
     
@@ -951,7 +979,7 @@ export default function SeatingChartGrid({
       transform: layoutPos.rotation ? `rotate(${layoutPos.rotation}deg)` : undefined,
       transformOrigin: 'center',
       transition: (isBeingDragged || isMultiDragging) ? 'none' : 'all 0.3s ease',
-      cursor: deskSwapMode ? 'grab' : (student ? 'move' : 'default'),
+      cursor: deleteDeskMode ? 'pointer' : (deskSwapMode ? 'grab' : (student ? 'move' : 'default')),
       zIndex: (isBeingDragged || isMultiDragging || isRandomlySelected) ? 30 : 'auto'
     };
 
@@ -966,6 +994,7 @@ export default function SeatingChartGrid({
             ${isBeingDragged || isMultiDragging ? 'shadow-lg scale-105' : ''}
             ${isSelected ? 'ring-2 ring-blue-400 ring-offset-2' : ''}
             ${deskSwapMode ? 'ring-2 ring-orange-400 ring-offset-1' : ''}
+            ${deleteDeskMode ? 'ring-2 ring-red-500 ring-offset-1 hover:ring-4 hover:bg-red-50' : ''}
             ${isRandomlySelected ? 'ring-4 ring-yellow-400 ring-offset-2 shadow-2xl scale-110 animate-pulse' : ''}
             ${isSelecting ? 'transition-all duration-100' : ''}
           `}
@@ -977,6 +1006,8 @@ export default function SeatingChartGrid({
             isDragging={draggedStudent?.id === student.id}
             position={seat.position}
             privacyMode={privacyMode}
+            onClick={studentSwapMode && onStudentClick ? () => onStudentClick(student.id) : undefined}
+            isFirstSwapSelection={firstSwapStudentId === student.id}
           />
         </div>
       );
@@ -992,6 +1023,7 @@ export default function SeatingChartGrid({
           ${isBeingDragged || isMultiDragging ? 'shadow-lg scale-105' : ''}
           ${isSelected ? 'ring-2 ring-blue-400 ring-offset-2' : ''}
           ${deskSwapMode ? 'ring-2 ring-orange-400 ring-offset-1' : ''}
+          ${deleteDeskMode ? 'ring-2 ring-red-500 ring-offset-1 hover:ring-4 cursor-pointer' : ''}
         `}
         onDragOver={(e) => handleDragOver(e, seat.position)}
         onDragLeave={handleDragLeave}

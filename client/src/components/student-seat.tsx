@@ -8,15 +8,19 @@ interface StudentSeatProps {
   isDragging: boolean;
   position: number;
   privacyMode?: boolean;
+  onClick?: () => void;
+  isFirstSwapSelection?: boolean;
 }
 
-export default function StudentSeat({ 
-  student, 
-  onDragStart, 
-  onDragEnd, 
+export default function StudentSeat({
+  student,
+  onDragStart,
+  onDragEnd,
   isDragging,
   position,
-  privacyMode = false
+  privacyMode = false,
+  onClick,
+  isFirstSwapSelection = false
 }: StudentSeatProps) {
   
   const getSkillLevelColor = (level: string) => {
@@ -64,10 +68,11 @@ export default function StudentSeat({
     <div
       className={`student-seat bg-white dark:bg-slate-800 border-4 border-slate-700 dark:border-slate-300 rounded-lg p-2 text-center shadow-lg min-w-20 min-h-20 flex flex-col justify-center ${
         isDragging ? 'opacity-50' : ''
-      }`}
+      } ${isFirstSwapSelection ? 'ring-4 ring-blue-500 ring-offset-2' : ''} ${onClick ? 'cursor-pointer' : ''}`}
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onClick={onClick}
       data-testid={`student-seat-${student.id}`}
       data-student-id={student.id}
       title={privacyMode ? `${student.name} (Seat ${position + 1})` : `${student.name} - ${student.skillLevel} - ${getPrimaryLanguageDisplay()}`}
