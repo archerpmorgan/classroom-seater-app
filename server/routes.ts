@@ -34,6 +34,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/students/batch", async (req, res) => {
+    try {
+      const { students } = req.body;
+      if (!Array.isArray(students)) {
+        return res.status(400).json({ message: "Students must be an array" });
+      }
+
+      const createdStudents = await storage.createStudentsBatch(students);
+      res.json({
+        message: `Successfully created ${createdStudents.length} students`,
+        students: createdStudents
+      });
+    } catch (error) {
+      console.error('Batch create error:', error);
+      res.status(500).json({ message: "Failed to create students" });
+    }
+  });
+
   app.put("/api/students/:id", async (req, res) => {
     try {
       const { id } = req.params;
@@ -187,10 +205,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Clean up common formatting issues
             if (mappedField === 'skillLevel') {
               value = value.toLowerCase();
-              // Handle common variations
-              if (value.includes('beg') || value === 'low' || value === '1') value = 'beginner';
-              if (value.includes('int') || value === 'med' || value === 'middle' || value === '2') value = 'intermediate';
-              if (value.includes('adv') || value === 'high' || value === '3') value = 'advanced';
+
+              // First check if it's already a valid enum value
+              if (value === 'beginner' || value === 'intermediate' || value === 'advanced') {
+                // Value is already valid, keep it as is
+              } else {
+                // Handle common variations for invalid values
+                if (value.includes('beg') || value === 'low' || value === '1') value = 'beginner';
+                else if (value.includes('int') || value === 'med' || value === 'middle' || value === '2') value = 'intermediate';
+                else if (value.includes('adv') || value === 'high' || value === '3') value = 'advanced';
+                // If no match, keep the original value and let validation catch it
+              }
             }
             
             studentData[mappedField] = value;
@@ -435,10 +460,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Clean up common formatting issues
             if (mappedField === 'skillLevel') {
               value = value.toLowerCase();
-              // Handle common variations
-              if (value.includes('beg') || value === 'low' || value === '1') value = 'beginner';
-              if (value.includes('int') || value === 'med' || value === 'middle' || value === '2') value = 'intermediate';
-              if (value.includes('adv') || value === 'high' || value === '3') value = 'advanced';
+
+              // First check if it's already a valid enum value
+              if (value === 'beginner' || value === 'intermediate' || value === 'advanced') {
+                // Value is already valid, keep it as is
+              } else {
+                // Handle common variations for invalid values
+                if (value.includes('beg') || value === 'low' || value === '1') value = 'beginner';
+                else if (value.includes('int') || value === 'med' || value === 'middle' || value === '2') value = 'intermediate';
+                else if (value.includes('adv') || value === 'high' || value === '3') value = 'advanced';
+                // If no match, keep the original value and let validation catch it
+              }
             }
             
             studentData[mappedField] = value;

@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import StudentSeat from "./student-seat";
 import type { Student } from "@shared/schema";
 
 interface SeatingChartGridProps {
-  layout: 'traditional-rows' | 'stadium' | 'horseshoe' | 'double-horseshoe' | 'circle' | 'groups' | 'pairs';
+  layout: 'traditional-rows' | 'stadium' | 'horseshoe' | 'double-horseshoe' | 'circle' | 'groups' | 'pairs-3-cols' | 'pairs-4-cols';
   students: Student[];
   currentChart: {position: number, studentId: string | null, customX?: number, customY?: number}[];
   onChartChange: (chart: {position: number, studentId: string | null, customX?: number, customY?: number}[]) => void;
@@ -84,7 +84,8 @@ export default function SeatingChartGrid({
       'horseshoe': 20,
       'double-horseshoe': 32,
       'circle': 16,
-      'pairs': 20
+      'pairs-3-cols': 24,
+      'pairs-4-cols': 32
     };
     
     const maxForLayout = maxSeats[layoutType as keyof typeof maxSeats] || 24;
@@ -323,15 +324,15 @@ export default function SeatingChartGrid({
         break;
       }
 
-      case 'pairs': {
+      case 'pairs-3-cols':
+      case 'pairs-4-cols': {
         // Dynamic pairs based on student count - centered in room
         let position = 0;
         const pairsNeeded = Math.ceil(seatCount / 2);
-        const columns = 3; // 3 columns of pairs
+        const columns = layoutType === 'pairs-3-cols' ? 3 : 4;
         const rowsNeeded = Math.ceil(pairsNeeded / columns);
         
         // Calculate center position for the pairs layout
-        const pairWidth = 160; // Width of one pair (2 seats * 80px spacing)
         const totalWidth = columns * 200; // Total width of all columns
         const startX = (900 - totalWidth) / 2; // Center the pairs layout in 900px room
         
@@ -365,12 +366,47 @@ export default function SeatingChartGrid({
   const totalSeats = studentCount > 0 ? getSeatCount(layout, studentCount) : 0;
   const layoutPositions = studentCount > 0 ? generateLayoutPositions(layout, totalSeats) : [];
   
-  // Initialize seats if empty, but only if there are students
-  const seats = currentChart.length > 0 
-    ? currentChart 
-    : studentCount > 0 
-      ? Array.from({ length: totalSeats }, (_, i) => ({ position: i, studentId: null, customX: undefined, customY: undefined }))
-      : [];
+  // Combine layout positions with current chart data
+  const seats = useMemo(() => {
+    // Create a map of layout positions for quick lookup
+    const layoutPositionsMap = new Map<number, SeatPosition>();
+    layoutPositions.forEach(pos => {
+      layoutPositionsMap.set(pos.position, pos);
+    });
+
+    // Start with the current chart data
+    const seatsFromChart = [...currentChart];
+    
+    // Add any missing positions from layout
+    layoutPositions.forEach(layoutPos => {
+      if (!seatsFromChart.some(seat => seat.position === layoutPos.position)) {
+        seatsFromChart.push({
+          position: layoutPos.position,
+          studentId: null,
+          customX: layoutPos.x,
+          customY: layoutPos.y
+        });
+      }
+    });
+    
+    // Ensure all seats have coordinates
+    return seatsFromChart.map(seat => {
+      const layoutPos = layoutPositionsMap.get(seat.position);
+      if (layoutPos) {
+        return {
+          ...seat,
+          customX: seat.customX ?? layoutPos.x,
+          customY: seat.customY ?? layoutPos.y
+        };
+      }
+      return seat;
+    });
+  }, [currentChart, layoutPositions]);
+  
+  // Debug log for seats
+  useEffect(() => {
+    console.log('Current seats:', seats);
+  }, [seats]);
 
   const getStudentById = (id: string | null): Student | undefined => {
     if (!id) return undefined;
@@ -609,7 +645,7 @@ export default function SeatingChartGrid({
       
       // Merge with existing selection if Ctrl/Cmd is held
       if (e.metaKey || e.ctrlKey) {
-        const combined = new Set([...selectedDesks, ...newSelection]);
+        const combined = new Set(Array.from(selectedDesks).concat(Array.from(newSelection)));
         setSelectedDesks(combined);
       } else {
         setSelectedDesks(newSelection);
@@ -957,8 +993,8 @@ export default function SeatingChartGrid({
         data-desk-position={seat.position}
         data-testid={`drop-zone-${seat.position}`}
       >
-        <div className="w-20 h-20 border-2 border-dashed border-muted-foreground/30 rounded-lg flex items-center justify-center bg-muted/20 hover:bg-muted/40 transition-colors">
-          <span className="text-xs text-muted-foreground">Empty</span>
+        <div className="w-20 h-20 border-4 border-dashed border-slate-500 dark:border-slate-400 rounded-lg flex items-center justify-center bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors shadow-md">
+          <span className="text-xs text-slate-700 dark:text-slate-200 font-semibold">Empty</span>
         </div>
       </div>
     );

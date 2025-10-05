@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,12 @@ import UploadArea from "@/components/upload-area";
 import SeatingChartGrid from "@/components/seating-chart-grid";
 import StudentTable from "@/components/student-table";
 import { generateSeatingChart } from "@/lib/seating-algorithms";
-import { Download, Save, GraduationCap, LayoutGrid, UserCog, Shuffle, Eraser, Users, Database, Eye, EyeOff, ArrowLeftRight, X, Undo2, Plus, RefreshCw, Camera, Info } from "lucide-react";
+import { Download, Save, GraduationCap, LayoutGrid, UserCog, Shuffle, Eraser, Users, Database, Eye, EyeOff, ArrowLeftRight, X, Undo2, Plus, RefreshCw, Camera, Info, Trash2, Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Student, SeatingChart as SeatingChartType } from "@shared/schema";
 
 export default function SeatingChart() {
-  const [layout, setLayout] = useState<'traditional-rows' | 'stadium' | 'horseshoe' | 'double-horseshoe' | 'circle' | 'groups' | 'pairs'>('traditional-rows');
+  const [layout, setLayout] = useState<'traditional-rows' | 'stadium' | 'horseshoe' | 'double-horseshoe' | 'circle' | 'groups' | 'pairs-3-cols' | 'pairs-4-cols'>('traditional-rows');
   const [strategy, setStrategy] = useState<string>('mixed-ability');
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentChart, setCurrentChart] = useState<{position: number, studentId: string | null, customX?: number, customY?: number}[]>([]);
@@ -24,6 +24,8 @@ export default function SeatingChart() {
   const [firstStudentId, setFirstStudentId] = useState<string>('');
   const [secondStudentId, setSecondStudentId] = useState<string>('');
   const [deskSwapMode, setDeskSwapMode] = useState(false);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [chartName, setChartName] = useState('');
   
   // Undo system state
   const [chartHistory, setChartHistory] = useState<{position: number, studentId: string | null, customX?: number, customY?: number}[][]>([]);
@@ -36,16 +38,19 @@ export default function SeatingChart() {
     queryKey: ['/api/students'],
   });
 
-  const { data: seatingCharts = [] } = useQuery<SeatingChartType[]>({
+  const { data: seatingCharts = [], isLoading: chartsLoading } = useQuery<SeatingChartType[]>({
     queryKey: ['/api/seating-charts'],
   });
 
   // Clear chart when students change or layout changes
+  // BUT don't clear if we're loading a saved chart
   useEffect(() => {
-    setCurrentChart([]);
-    // Clear undo history when students or layout changes
-    setChartHistory([]);
-    setHistoryIndex(-1);
+    if (!isLoadingChart.current) {
+      setCurrentChart([]);
+      // Clear undo history when students or layout changes
+      setChartHistory([]);
+      setHistoryIndex(-1);
+    }
   }, [students.length, layout]);
 
   // Function to save current state to history
@@ -91,6 +96,9 @@ export default function SeatingChart() {
   // State to track if we're restoring from history
   const [isRestoringFromHistory, setIsRestoringFromHistory] = useState(false);
 
+  // Ref to track if we're loading a saved chart (to prevent clearing)
+  const isLoadingChart = useRef(false);
+
   const deleteAllStudentsMutation = useMutation({
     mutationFn: () => apiRequest('DELETE', '/api/students'),
     onSuccess: () => {
@@ -110,8 +118,26 @@ export default function SeatingChart() {
     },
   });
 
+  const deleteChartMutation = useMutation({
+    mutationFn: (chartId: number) => apiRequest('DELETE', `/api/seating-charts/${chartId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/seating-charts'] });
+      toast({
+        title: "Success",
+        description: "Seating chart deleted successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete seating chart",
+        variant: "destructive",
+      });
+    },
+  });
+
   const saveChartMutation = useMutation({
-    mutationFn: (chartData: { name: string; layout: string; strategy: string; seats: any[] }) =>
+    mutationFn: (chartData: { name: string; layout: string; strategy: string; seats: any[]; students: any[] }) =>
       apiRequest('POST', '/api/seating-charts', chartData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/seating-charts'] });
@@ -127,6 +153,10 @@ export default function SeatingChart() {
         variant: "destructive",
       });
     },
+    onSettled: () => {
+      setIsSaveModalOpen(false);
+      setChartName('');
+    }
   });
 
   const getSeatCount = (layoutType: string, studentCount: number) => {
@@ -143,7 +173,8 @@ export default function SeatingChart() {
       'horseshoe': 20,
       'double-horseshoe': 32,
       'circle': 16,
-      'pairs': 20
+      'pairs-3-cols': 24,
+      'pairs-4-cols': 32
     };
     
     const maxForLayout = maxSeats[layoutType as keyof typeof maxSeats] || 24;
@@ -170,7 +201,7 @@ export default function SeatingChart() {
       
       // Create detailed success message
       const layoutName = getLayoutName(layout);
-      const isGroupingLayout = layout === 'groups' || layout === 'pairs';
+      const isGroupingLayout = layout === 'groups' || layout.startsWith('pairs');
       const strategyDescription = isGroupingLayout ? getStrategyDescription(strategy).split('.')[0] : null;
       
       let description = `${layoutName} seating chart generated successfully`;
@@ -194,13 +225,71 @@ export default function SeatingChart() {
   };
 
   const handleSaveChart = () => {
-    const chartName = `${strategy} Layout - ${new Date().toLocaleDateString()}`;
+    if (!chartName) {
+      toast({
+        title: "Name Required",
+        description: "Please enter a name for your chart.",
+        variant: "destructive",
+      });
+      return;
+    }
     saveChartMutation.mutate({
       name: chartName,
       layout,
       strategy,
       seats: currentChart,
+      students: students, // Save the current student data
     });
+  };
+
+  const handleLoadChart = async (chart: SeatingChartType) => {
+    const loadedSeats = typeof chart.seats === 'string' ? JSON.parse(chart.seats) : chart.seats;
+    const loadedStudents = typeof chart.students === 'string' ? JSON.parse(chart.students) : chart.students;
+
+    // Set flag to prevent the useEffect from clearing the chart
+    isLoadingChart.current = true;
+
+    try {
+      // First, clear existing students
+      await apiRequest('DELETE', '/api/students');
+
+      // Then batch create the students from the saved chart
+      if (loadedStudents && loadedStudents.length > 0) {
+        await apiRequest('POST', '/api/students/batch', { students: loadedStudents });
+      }
+
+      // Invalidate students query to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['/api/students'] });
+
+      // Update layout and strategy
+      setLayout(chart.layout as any);
+      setStrategy(chart.strategy);
+
+      // Set the chart data
+      setCurrentChart(loadedSeats);
+      saveToHistory(loadedSeats); // Add to history for undo
+
+      toast({
+        title: "Chart Loaded",
+        description: `Successfully loaded "${chart.name}" with ${loadedStudents?.length || 0} students`,
+      });
+    } catch (error) {
+      console.error('Error loading chart:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load chart and student data",
+        variant: "destructive",
+      });
+    } finally {
+      // Reset the flag after a brief delay to allow state updates to complete
+      setTimeout(() => {
+        isLoadingChart.current = false;
+      }, 100);
+    }
+  };
+
+  const handleDeleteChart = (chartId: number) => {
+    deleteChartMutation.mutate(chartId);
   };
 
   const handleShuffleAll = () => {
@@ -222,16 +311,16 @@ export default function SeatingChart() {
 
   const handleAddDesk = () => {
     // Find the next available position
-    const nextPosition = currentChart.length;
+    const nextPosition = currentChart.length > 0 
+      ? Math.max(...currentChart.map(seat => seat.position)) + 1
+      : 0;
     
-    // Place new desk in bottom right area where it's clearly visible
-    // Room width is typically 900px, so place at around 750px from left
-    // Room height varies, but place it low at around 500px from top
+    // Calculate position in the visible area (center of the classroom)
     const newDesk = {
       position: nextPosition,
       studentId: null,
-      customX: 750, // Bottom right area
-      customY: 500  // Bottom right area
+      customX: 400,  // Center of the classroom
+      customY: 300   // Center of the classroom
     };
     
     // Add the new desk to the current chart
@@ -243,8 +332,11 @@ export default function SeatingChart() {
     
     toast({
       title: "Desk Added",
-      description: `Empty desk #${nextPosition + 1} added to bottom right. You can drag it anywhere.`,
+      description: `Empty desk #${nextPosition + 1} added to the center of the classroom.`,
     });
+    
+    // Debug log
+    console.log('Added new desk:', newDesk);
   };
 
   const handleDownloadLayoutImage = async () => {
@@ -423,7 +515,8 @@ export default function SeatingChart() {
       case 'double-horseshoe': return 'Double Horseshoe';
       case 'circle': return 'Circle/Roundtable';
       case 'groups': return 'Group Tables';
-      case 'pairs': return 'Paired Desks';
+      case 'pairs-3-cols': return 'Paired Desks (3 Cols)';
+      case 'pairs-4-cols': return 'Paired Desks (4 Cols)';
       default: return layout;
     }
   };
@@ -436,7 +529,8 @@ export default function SeatingChart() {
       case 'double-horseshoe': return 'Inner and outer horseshoe rings for larger classes. Allows discussion format while accommodating more students.';
       case 'circle': return 'Complete circle creating democratic, non-hierarchical space. Ideal for advanced discussions and Socratic seminars.';
       case 'groups': return 'Clusters of 4-6 desks promoting collaboration. Excellent for group projects and peer learning activities.';
-      case 'pairs': return 'Desks arranged in pairs throughout room. Balances collaboration with individual focus.';
+      case 'pairs-3-cols': return 'Desks in pairs across 3 columns. Good for combining collaboration with a structured classroom.';
+      case 'pairs-4-cols': return 'Desks in pairs across 4 columns. Maximizes space for paired activities in larger classes.';
       default: return 'Select a layout to see description.';
     }
   };
@@ -449,7 +543,8 @@ export default function SeatingChart() {
       case 'double-horseshoe': return 'Large group discussions';
       case 'circle': return 'Socratic seminars, peer reviews';
       case 'groups': return 'Collaborative projects, group work';
-      case 'pairs': return 'Peer learning, think-pair-share';
+      case 'pairs-3-cols': return 'Peer learning, think-pair-share';
+      case 'pairs-4-cols': return 'Peer learning, think-pair-share';
       default: return '';
     }
   };
@@ -529,6 +624,22 @@ export default function SeatingChart() {
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Download Layout as Image</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => setIsSaveModalOpen(true)}
+                    disabled={currentChart.length === 0}
+                    data-testid="button-save-chart"
+                  >
+                    <Save className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Save Seating Chart</p>
                 </TooltipContent>
               </Tooltip>
               <Button 
@@ -758,25 +869,37 @@ export default function SeatingChart() {
                     <input 
                       type="radio" 
                       name="layout" 
-                      value="pairs" 
-                      checked={layout === 'pairs'}
+                      value="pairs-3-cols" 
+                      checked={layout === 'pairs-3-cols'}
                       onChange={(e) => setLayout(e.target.value as any)}
                       className="text-primary"
-                      data-testid="input-layout-pairs"
+                      data-testid="input-layout-pairs-3-cols"
                     />
-                    <span className="text-sm">Paired Desks</span>
+                    <span className="text-sm">Paired Desks (3 Cols)</span>
+                  </label>
+                  <label className="flex items-center space-x-3 cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="layout" 
+                      value="pairs-4-cols" 
+                      checked={layout === 'pairs-4-cols'}
+                      onChange={(e) => setLayout(e.target.value as any)}
+                      className="text-primary"
+                      data-testid="input-layout-pairs-4-cols"
+                    />
+                    <span className="text-sm">Paired Desks (4 Cols)</span>
                   </label>
                 </div>
               </CardContent>
             </Card>
 
             {/* Grouping Strategies */}
-            <Card className={layout !== 'groups' && layout !== 'pairs' ? 'opacity-75' : ''}>
+            <Card className={layout !== 'groups' && !layout.startsWith('pairs') ? 'opacity-75' : ''}>
               <CardContent className="p-6">
                 <h2 className="text-lg font-semibold mb-4 text-card-foreground">
                   <Users className="w-5 h-5 inline mr-2 text-accent" />
                   Grouping Strategy
-                  {layout !== 'groups' && layout !== 'pairs' && (
+                  {layout !== 'groups' && !layout.startsWith('pairs') && (
                     <span className="ml-2 text-xs font-normal text-muted-foreground">
                       (Not applicable)
                     </span>
@@ -784,7 +907,7 @@ export default function SeatingChart() {
                 </h2>
                 
                 {/* Show message when grouping strategy is not relevant */}
-                {layout !== 'groups' && layout !== 'pairs' && (
+                {layout !== 'groups' && !layout.startsWith('pairs') && (
                   <div className="bg-muted rounded-md p-4 border-l-4 border-muted-foreground">
                     <p className="text-sm text-muted-foreground">
                       <span className="mr-2">ℹ️</span>
@@ -795,7 +918,7 @@ export default function SeatingChart() {
                 )}
                 
                 {/* Show grouping strategy options only for relevant layouts */}
-                {(layout === 'groups' || layout === 'pairs') && (
+                {(layout === 'groups' || layout.startsWith('pairs')) && (
                   <div className="space-y-3">
                     <Select value={strategy} onValueChange={setStrategy}>
                       <SelectTrigger data-testid="select-grouping-strategy">
@@ -812,19 +935,60 @@ export default function SeatingChart() {
                       </SelectContent>
                     </Select>
                     
-                    <div className="bg-muted rounded-md p-3">
-                      <p className="text-xs text-muted-foreground">
-                        <span className="mr-1">📚</span>
-                        {getStrategyDescription(strategy)}
-                      </p>
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        <strong>Research basis:</strong> {getStrategyResearch(strategy)}
-                      </div>
+                    {/* Strategy Info Box */}
+                    <div className="p-3 bg-muted rounded-md text-xs text-muted-foreground">
+                      <p><strong>{getStrategyDescription(strategy).split('.')[0]}</strong></p>
+                      <p className="mt-2">{getStrategyResearch(strategy)}</p>
                     </div>
                   </div>
                 )}
-                
+              </CardContent>
+            </Card>
 
+            {/* Saved Charts */}
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-lg font-semibold mb-4 text-card-foreground">
+                  <Save className="w-5 h-5 inline mr-2 text-primary" />
+                  Saved Charts
+                </h2>
+                {chartsLoading ? (
+                  <div className="text-center text-muted-foreground">
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                    <p>Loading charts...</p>
+                  </div>
+                ) : seatingCharts.length === 0 ? (
+                  <div className="bg-muted rounded-md p-3 text-center text-sm text-muted-foreground">
+                    <p>No saved charts yet.</p>
+                    <p className="text-xs">Save a chart to see it here.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                    {seatingCharts.map((chart) => (
+                      <div key={chart.id} className="flex items-center justify-between p-2 border rounded-md bg-background">
+                        <div>
+                          <p className="text-sm font-medium">{chart.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {getLayoutName(chart.layout)} - {chart.createdAt ? new Date(chart.createdAt).toLocaleDateString() : 'N/A'}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Button size="sm" variant="outline" onClick={() => handleLoadChart(chart)}>Load</Button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleDeleteChart(Number(chart.id))}>
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Delete Chart</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -1053,6 +1217,47 @@ export default function SeatingChart() {
       )}
 
       {/* Loading Overlay */}
+      {/* Save Chart Modal */}
+      {isSaveModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-lg p-6 max-w-md mx-4 w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-card-foreground">Save Seating Chart</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsSaveModalOpen(false)}
+                className="h-6 w-6"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="chartName" className="text-sm font-medium text-foreground mb-2 block">
+                  Chart Name
+                </label>
+                <input
+                  id="chartName"
+                  type="text"
+                  value={chartName}
+                  onChange={(e) => setChartName(e.target.value)}
+                  placeholder={`e.g., Period 3 - ${new Date().toLocaleDateString()}`}
+                  className="w-full p-2 border rounded-md bg-background"
+                />
+              </div>
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button variant="outline" onClick={() => setIsSaveModalOpen(false)}>Cancel</Button>
+                <Button onClick={handleSaveChart} disabled={saveChartMutation.isPending}>
+                  {saveChartMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} 
+                  Save
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isGenerating && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-card rounded-lg p-8 text-center max-w-sm mx-4">

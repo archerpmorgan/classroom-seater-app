@@ -18,7 +18,8 @@ export const seatingCharts = pgTable("seating_charts", {
   name: text("name").notNull(),
   layout: text("layout").notNull(), // 'traditional-rows', 'stadium', 'horseshoe', 'double-horseshoe', 'circle', 'groups', 'pairs'
   strategy: text("strategy").notNull(), // 'mixed-ability', 'skill-clustering', 'language-support', 'collaborative-pairs', 'attention-zone', 'behavior-management', 'random'
-  seats: jsonb("seats").$type<{position: number, studentId: string | null}[]>().notNull(),
+  seats: jsonb("seats").$type<{position: number, studentId: string | null, customX?: number, customY?: number}[]>().notNull(),
+  students: jsonb("students").$type<{id: string, name: string, primaryLanguage: string, skillLevel: string, worksWellWith: string[], avoidPairing: string[], notes: string}[]>().notNull().default([]),
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 

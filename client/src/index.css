@@ -61,7 +61,7 @@
   }
 }
 
-/* Classroom Container Styles */
+/* Classroom Container Styles - Enhanced for Projection */
 .classroom-container {
   display: flex;
   justify-content: center;
@@ -72,17 +72,19 @@
 }
 
 .classroom-container .relative {
-  box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.15), 0 0 0 3px hsl(210, 60%, 40%);
   position: relative;
-  background: linear-gradient(135deg, hsl(210, 20%, 98%) 0%, hsl(210, 15%, 95%) 100%);
+  background: linear-gradient(135deg, hsl(0, 0%, 100%) 0%, hsl(210, 20%, 96%) 100%);
+  border: 2px solid hsl(210, 60%, 30%);
 }
 
 .dark .classroom-container .relative {
-  background: linear-gradient(135deg, hsl(210, 10%, 12%) 0%, hsl(210, 8%, 8%) 100%);
-  box-shadow: inset 0 0 20px rgba(255,255,255,0.05);
+  background: linear-gradient(135deg, hsl(210, 15%, 8%) 0%, hsl(210, 12%, 5%) 100%);
+  box-shadow: inset 0 0 30px rgba(255,255,255,0.1), 0 0 0 3px hsl(210, 60%, 60%);
+  border: 2px solid hsl(210, 60%, 70%);
 }
 
-/* Enhanced Student Seat Styles */
+/* Enhanced Student Seat Styles - High Contrast for Projection */
 .student-seat {
   transition: all 0.2s ease;
   cursor: move;
@@ -93,76 +95,90 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 3px solid hsl(210, 60%, 30%) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .student-seat:hover {
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.9);
   z-index: 10;
+  border-color: hsl(210, 60%, 20%) !important;
 }
 
 .dark .student-seat:hover {
-  box-shadow: 0 6px 16px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border-color: hsl(210, 60%, 80%) !important;
 }
 
-/* Drop Zone Styles */
+/* Drop Zone Styles - Enhanced Visibility */
 .drop-zone {
   transition: all 0.2s ease;
   cursor: pointer;
   position: relative;
   z-index: 0;
+  width: 5rem;
+  height: 5rem;
 }
 
 .drop-zone:hover {
   transform: scale(1.05);
 }
 
-.drop-zone {
-  width: 5rem;
-  height: 5rem;
+.drop-zone > div {
+  border: 3px dashed hsl(210, 15%, 40%) !important;
+  background: hsl(210, 20%, 92%) !important;
+}
+
+.dark .drop-zone > div {
+  border: 3px dashed hsl(210, 15%, 60%) !important;
+  background: hsl(210, 15%, 15%) !important;
 }
 
 .drag-over {
-  border: 2px dashed hsl(210, 60%, 50%) !important;
-  background: hsl(210, 60%, 50%, 0.15) !important;
-  box-shadow: 0 0 0 3px hsl(210, 60%, 50%, 0.3) !important;
+  border: 4px dashed hsl(210, 60%, 40%) !important;
+  background: hsl(210, 60%, 50%, 0.25) !important;
+  box-shadow: 0 0 0 4px hsl(210, 60%, 50%, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3) !important;
   transform: scale(1.1) !important;
 }
 
-/* Layout-specific visual enhancements */
+/* Layout-specific visual enhancements - High Contrast */
 .traditional-rows-layout .student-seat {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 3px solid hsl(210, 60%, 30%) !important;
 }
 
 .stadium-layout .student-seat {
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 3px solid hsl(210, 60%, 30%) !important;
 }
 
 .horseshoe-layout .student-seat,
 .double-horseshoe-layout .student-seat {
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  border: 1px solid hsl(210, 60%, 50%, 0.2);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 4px solid hsl(210, 60%, 25%) !important;
 }
 
 .circle-layout .student-seat {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border: 2px solid hsl(210, 60%, 50%, 0.3);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 4px solid hsl(210, 60%, 25%) !important;
   border-radius: 50%;
 }
 
 .groups-layout .student-seat {
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
-  border: 2px solid hsl(150, 40%, 45%, 0.3);
-  background: linear-gradient(135deg, hsl(150, 40%, 98%) 0%, hsl(150, 40%, 95%) 100%);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 4px solid hsl(150, 40%, 25%) !important;
+  background: linear-gradient(135deg, hsl(150, 40%, 98%) 0%, hsl(150, 40%, 92%) 100%);
 }
 
 .dark .groups-layout .student-seat {
-  background: linear-gradient(135deg, hsl(150, 40%, 15%) 0%, hsl(150, 40%, 10%) 100%);
+  background: linear-gradient(135deg, hsl(150, 40%, 18%) 0%, hsl(150, 40%, 8%) 100%);
+  border: 4px solid hsl(150, 40%, 70%) !important;
 }
 
 .pairs-layout .student-seat {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid hsl(45, 90%, 60%, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 3px solid hsl(45, 90%, 40%) !important;
 }
 
 /* Dragging states */

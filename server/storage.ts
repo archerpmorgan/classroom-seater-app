@@ -37,10 +37,11 @@ export class MemStorage implements IStorage {
     return this.students.get(id);
   }
 
-  async createStudent(insertStudent: InsertStudent): Promise<Student> {
-    const id = randomUUID();
-    const student: Student = { 
-      ...insertStudent, 
+  async createStudent(insertStudent: InsertStudent & {id?: string}): Promise<Student> {
+    // Use provided ID if available (for restoring saved data), otherwise generate new one
+    const id = insertStudent.id || randomUUID();
+    const student: Student = {
+      ...insertStudent,
       id,
       secondaryLanguages: insertStudent.secondaryLanguages || [],
       worksWellWith: insertStudent.worksWellWith || [],
@@ -76,7 +77,7 @@ export class MemStorage implements IStorage {
     this.students.clear();
   }
 
-  async createStudentsBatch(students: InsertStudent[]): Promise<Student[]> {
+  async createStudentsBatch(students: (InsertStudent & {id?: string})[]): Promise<Student[]> {
     const createdStudents: Student[] = [];
     for (const insertStudent of students) {
       const student = await this.createStudent(insertStudent);
@@ -96,10 +97,11 @@ export class MemStorage implements IStorage {
 
   async createSeatingChart(insertChart: InsertSeatingChart): Promise<SeatingChart> {
     const id = randomUUID();
-    const chart: SeatingChart = { 
-      ...insertChart, 
+    const chart: SeatingChart = {
+      ...insertChart,
       id,
-      seats: insertChart.seats || [],
+      seats: (insertChart.seats || []) as {position: number, studentId: string | null, customX?: number, customY?: number}[],
+      students: (insertChart.students || []) as {id: string, name: string, primaryLanguage: string, skillLevel: string, worksWellWith: string[], avoidPairing: string[], notes: string}[],
       createdAt: new Date().toISOString()
     };
     this.seatingCharts.set(id, chart);
@@ -109,13 +111,14 @@ export class MemStorage implements IStorage {
   async updateSeatingChart(id: string, updateData: Partial<InsertSeatingChart>): Promise<SeatingChart | undefined> {
     const existing = this.seatingCharts.get(id);
     if (!existing) return undefined;
-    
-    const updated: SeatingChart = { 
-      ...existing, 
+
+    const updated: SeatingChart = {
+      ...existing,
       ...updateData,
       id: existing.id,
       createdAt: existing.createdAt,
-      seats: updateData.seats !== undefined ? updateData.seats : existing.seats
+      seats: (updateData.seats !== undefined ? updateData.seats : existing.seats) as {position: number, studentId: string | null, customX?: number, customY?: number}[],
+      students: (updateData.students !== undefined ? updateData.students : existing.students) as {id: string, name: string, primaryLanguage: string, skillLevel: string, worksWellWith: string[], avoidPairing: string[], notes: string}[]
     };
     this.seatingCharts.set(id, updated);
     return updated;

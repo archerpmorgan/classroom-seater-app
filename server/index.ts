@@ -2,12 +2,44 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express, { type Request, Response, NextFunction } from "express";
+import sqlite3 from 'sqlite3';
+import { open, Database } from 'sqlite';
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+let db: Database;
+
+async function initializeDatabase() {
+  try {
+    db = await open({
+      filename: './database.db',
+      driver: sqlite3.Database
+    });
+
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS seating_charts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        layout TEXT NOT NULL,
+        strategy TEXT NOT NULL,
+        seats TEXT NOT NULL, -- JSON stringify the seats array
+        students TEXT, -- JSON stringify the students array
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    log('Database initialized successfully.');
+  } catch (error) {
+    console.error('Failed to initialize database:', error);
+    process.exit(1);
+  }
+}
+
+// Seating chart routes are now handled in routes.ts
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -40,6 +72,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  await initializeDatabase();
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

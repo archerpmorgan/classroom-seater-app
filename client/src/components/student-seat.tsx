@@ -62,7 +62,7 @@ export default function StudentSeat({
 
   return (
     <div
-      className={`student-seat bg-background border-2 border-border rounded-lg p-2 text-center shadow-sm min-w-20 min-h-20 flex flex-col justify-center ${
+      className={`student-seat bg-white dark:bg-slate-800 border-4 border-slate-700 dark:border-slate-300 rounded-lg p-2 text-center shadow-lg min-w-20 min-h-20 flex flex-col justify-center ${
         isDragging ? 'opacity-50' : ''
       }`}
       draggable
@@ -73,14 +73,14 @@ export default function StudentSeat({
       title={privacyMode ? `${student.name} (Seat ${position + 1})` : `${student.name} - ${student.skillLevel} - ${getPrimaryLanguageDisplay()}`}
     >
       {/* Always show student name */}
-      <div className="font-bold text-foreground leading-tight" style={{fontSize: getNameFontSize()}}>
+      <div className="font-bold text-slate-900 dark:text-white leading-tight" style={{fontSize: getNameFontSize()}}>
         {getFirstName()}
       </div>
       
       {!privacyMode && (
         // Normal mode: Show additional student information
         <>
-          <div className="text-xs text-muted-foreground mt-1 leading-tight" style={{fontSize: '10px'}}>
+          <div className="text-xs text-slate-700 dark:text-slate-200 mt-1 leading-tight font-medium" style={{fontSize: '10px'}}>
             {getPrimaryLanguageDisplay()}
           </div>
           <div className="flex justify-center mt-1">
