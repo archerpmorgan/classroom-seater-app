@@ -10,6 +10,8 @@ interface SeatingChartGridProps {
   onChartChangeComplete?: (chart: {position: number, studentId: string | null, customX?: number, customY?: number}[]) => void;
   privacyMode?: boolean;
   deskSwapMode?: boolean;
+  selectedStudentId?: string | null;
+  isSelecting?: boolean;
 }
 
 interface SeatPosition {
@@ -19,14 +21,16 @@ interface SeatPosition {
   rotation?: number;
 }
 
-export default function SeatingChartGrid({ 
-  layout, 
-  students, 
-  currentChart, 
+export default function SeatingChartGrid({
+  layout,
+  students,
+  currentChart,
   onChartChange,
   onChartChangeComplete,
   privacyMode,
-  deskSwapMode = false
+  deskSwapMode = false,
+  selectedStudentId = null,
+  isSelecting = false
 }: SeatingChartGridProps) {
   const [draggedStudent, setDraggedStudent] = useState<Student | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<number | null>(null);
@@ -934,11 +938,12 @@ export default function SeatingChartGrid({
     const isBeingDragged = isDraggingDesk && draggingDeskPosition === seat.position;
     const isSelected = selectedDesks.has(seat.position);
     const isMultiDragging = isDraggingMultiple && isSelected;
-    
+    const isRandomlySelected = selectedStudentId && seat.studentId === selectedStudentId;
+
     // Use custom position if available, otherwise use layout position
     const x = seat.customX ?? layoutPos.x;
     const y = seat.customY ?? layoutPos.y;
-    
+
     const seatStyle = {
       position: 'absolute' as const,
       left: `${x}px`,
@@ -947,13 +952,13 @@ export default function SeatingChartGrid({
       transformOrigin: 'center',
       transition: (isBeingDragged || isMultiDragging) ? 'none' : 'all 0.3s ease',
       cursor: deskSwapMode ? 'grab' : (student ? 'move' : 'default'),
-      zIndex: (isBeingDragged || isMultiDragging) ? 30 : 'auto'
+      zIndex: (isBeingDragged || isMultiDragging || isRandomlySelected) ? 30 : 'auto'
     };
 
     if (student) {
       return (
-        <div 
-          key={`seat-${seat.position}`} 
+        <div
+          key={`seat-${seat.position}`}
           style={seatStyle}
           onMouseDown={(e) => handleDeskMouseDown(e, seat.position)}
           data-desk-position={seat.position}
@@ -961,6 +966,8 @@ export default function SeatingChartGrid({
             ${isBeingDragged || isMultiDragging ? 'shadow-lg scale-105' : ''}
             ${isSelected ? 'ring-2 ring-blue-400 ring-offset-2' : ''}
             ${deskSwapMode ? 'ring-2 ring-orange-400 ring-offset-1' : ''}
+            ${isRandomlySelected ? 'ring-4 ring-yellow-400 ring-offset-2 shadow-2xl scale-110 animate-pulse' : ''}
+            ${isSelecting ? 'transition-all duration-100' : ''}
           `}
         >
           <StudentSeat

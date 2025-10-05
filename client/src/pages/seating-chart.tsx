@@ -10,7 +10,7 @@ import UploadArea from "@/components/upload-area";
 import SeatingChartGrid from "@/components/seating-chart-grid";
 import StudentTable from "@/components/student-table";
 import { generateSeatingChart } from "@/lib/seating-algorithms";
-import { Download, Save, GraduationCap, LayoutGrid, UserCog, Shuffle, Eraser, Users, Database, Eye, EyeOff, ArrowLeftRight, X, Undo2, Plus, RefreshCw, Camera, Info, Trash2, Loader2 } from "lucide-react";
+import { Download, Save, GraduationCap, LayoutGrid, UserCog, Shuffle, Eraser, Users, Database, Eye, EyeOff, ArrowLeftRight, X, Undo2, Plus, RefreshCw, Camera, Info, Trash2, Loader2, Sparkles } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Student, SeatingChart as SeatingChartType } from "@shared/schema";
 
@@ -26,7 +26,11 @@ export default function SeatingChart() {
   const [deskSwapMode, setDeskSwapMode] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [chartName, setChartName] = useState('');
-  
+
+  // Random student selection state
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
+
   // Undo system state
   const [chartHistory, setChartHistory] = useState<{position: number, studentId: string | null, customX?: number, customY?: number}[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -455,6 +459,54 @@ export default function SeatingChart() {
     }
   };
 
+  const handleRandomSelection = () => {
+    // Get all seats with students
+    const seatsWithStudents = currentChart.filter(seat => seat.studentId !== null);
+
+    if (seatsWithStudents.length === 0) {
+      toast({
+        title: "No Students",
+        description: "Generate a seating chart first to select a random student",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Start the selection animation
+    setIsSelecting(true);
+
+    // Animate through random selections for dramatic effect
+    let iterations = 0;
+    const maxIterations = 15;
+    const interval = setInterval(() => {
+      const randomSeat = seatsWithStudents[Math.floor(Math.random() * seatsWithStudents.length)];
+      setSelectedStudentId(randomSeat.studentId);
+      iterations++;
+
+      if (iterations >= maxIterations) {
+        clearInterval(interval);
+        setIsSelecting(false);
+
+        // Get the final selected student
+        const finalSeat = seatsWithStudents[Math.floor(Math.random() * seatsWithStudents.length)];
+        setSelectedStudentId(finalSeat.studentId);
+
+        const selectedStudent = students.find(s => s.id === finalSeat.studentId);
+        if (selectedStudent) {
+          toast({
+            title: "Student Selected!",
+            description: `${selectedStudent.name} has been randomly selected`,
+          });
+        }
+      }
+    }, 100);
+  };
+
+  const handleClearSelection = () => {
+    setSelectedStudentId(null);
+    setIsSelecting(false);
+  };
+
   const handleSwapStudents = () => {
     if (!firstStudentId || !secondStudentId || firstStudentId === secondStudentId) {
       toast({
@@ -662,8 +714,8 @@ export default function SeatingChart() {
               >
                 <ArrowLeftRight className="w-4 h-4" />
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="icon"
                 onClick={handleUndo}
                 disabled={historyIndex <= 0}
@@ -672,6 +724,86 @@ export default function SeatingChart() {
               >
                 <Undo2 className="w-4 h-4" />
               </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleRandomSelection}
+                    disabled={currentChart.length === 0 || isSelecting}
+                    data-testid="button-random-selection"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{isSelecting ? "Selecting..." : "Random Student Selection"}</p>
+                </TooltipContent>
+              </Tooltip>
+              {selectedStudentId && !isSelecting && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={handleClearSelection}
+                      data-testid="button-clear-selection"
+                      className="text-orange-600 hover:text-orange-700"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Clear Selection</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleShuffleAll}
+                    disabled={students.length === 0}
+                    data-testid="button-shuffle-all"
+                  >
+                    <Shuffle className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Shuffle All Students</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleAddDesk}
+                    data-testid="button-add-desk"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Add Empty Desk</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleClearChart}
+                    data-testid="button-clear-chart"
+                  >
+                    <Eraser className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Clear Chart</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
             </TooltipProvider>
           </div>
@@ -992,43 +1124,6 @@ export default function SeatingChart() {
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="text-lg font-semibold mb-4 text-card-foreground">Quick Actions</h2>
-                <div className="space-y-2">
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start text-sm" 
-                    onClick={handleShuffleAll}
-                    disabled={students.length === 0}
-                    data-testid="button-shuffle-all"
-                  >
-                    <Shuffle className="w-4 h-4 mr-2 text-muted-foreground" />
-                    Shuffle All Students
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start text-sm" 
-                    onClick={handleAddDesk}
-                    data-testid="button-add-desk"
-                  >
-                    <Plus className="w-4 h-4 mr-2 text-muted-foreground" />
-                    Add Empty Desk
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start text-sm" 
-                    onClick={handleClearChart}
-                    data-testid="button-clear-chart"
-                  >
-                    <Eraser className="w-4 h-4 mr-2 text-muted-foreground" />
-                    Clear Chart
-                  </Button>
-
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Main Content Area */}
@@ -1108,7 +1203,7 @@ export default function SeatingChart() {
                 {/* Teacher's Desk Indicator */}
                 
                 <TooltipProvider>
-                  <SeatingChartGrid 
+                  <SeatingChartGrid
                     layout={layout}
                     students={students}
                     currentChart={currentChart}
@@ -1125,6 +1220,8 @@ export default function SeatingChart() {
                     }}
                     privacyMode={privacyMode}
                     deskSwapMode={deskSwapMode}
+                    selectedStudentId={selectedStudentId}
+                    isSelecting={isSelecting}
                   />
                 </TooltipProvider>
               </CardContent>
